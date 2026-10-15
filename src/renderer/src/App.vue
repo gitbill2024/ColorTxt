@@ -229,7 +229,9 @@ import type { VoiceReadProfile } from "@shared/voiceReadProfiles";
 import {
   DEFAULT_HIGHLIGHT_COLORS_DARK,
   DEFAULT_HIGHLIGHT_COLORS_LIGHT,
+  DEFAULT_HIGHLIGHT_LAST_COLOR,
   MIN_HIGHLIGHT_COLORS,
+  clampHighlightLastColorToCount,
   mergeHighlightColors,
 } from "./constants/highlightColors";
 import {
@@ -847,6 +849,7 @@ const highlightWordsByIndexGlobal = ref<HighlightWordsByIndex | undefined>(
 const lineationLastColors = ref<LineationLastColorPrefs>({
   ...DEFAULT_LINEATION_LAST_COLORS,
 });
+const highlightLastColor = ref(DEFAULT_HIGHLIGHT_LAST_COLOR);
 
 const highlightColorsForReader = computed(() =>
   currentTheme.value === "vs"
@@ -1231,6 +1234,7 @@ const persistence = useAppPersistence({
   lineationColorsDark,
   highlightWordsByIndexGlobal,
   lineationLastColors,
+  highlightLastColor,
   ebookConvertOutputDir,
   bookPackUnpackDir,
   bookPackPassword,
@@ -3304,6 +3308,10 @@ function onApplyColorScheme(payload: ColorSchemeApplyPayload) {
         ? payload.highlight.dark
         : undefined,
     );
+    highlightLastColor.value = clampHighlightLastColorToCount(
+      highlightLastColor.value,
+      highlightColorsForReader.value.length,
+    );
   }
   if (payload.lineation) {
     lineationColorsLight.value = mergeLineationColors(
@@ -3339,6 +3347,14 @@ function onUpdateLineationLastColor(payload: {
       [payload.type]: payload.colorIndex,
     },
     lineationColorsForReader.value.length,
+  );
+  persistSettings();
+}
+
+function onUpdateHighlightLastColor(colorIndex: number) {
+  highlightLastColor.value = clampHighlightLastColorToCount(
+    colorIndex,
+    highlightColorsForReader.value.length,
   );
   persistSettings();
 }
@@ -4141,6 +4157,7 @@ useAppShellThemeWatch({
           :highlight-words-by-index-book-only="readerDisplayHighlightWordsBookOnly"
           :reader-annotations="currentFileAnnotations"
           :lineation-last-colors="lineationLastColors"
+          :highlight-last-color="highlightLastColor"
           :reader-file-path="currentFile"
           :ebook-anchor-physical-to-display="
             stream.physicalLineToDisplayForReader
@@ -4175,6 +4192,7 @@ useAppShellThemeWatch({
           @remove-reader-annotation="onRemoveReaderAnnotation"
           @annotation-quotes-changed="bumpAnnotationDisplayEpoch"
           @update-lineation-last-color="onUpdateLineationLastColor"
+          @update-highlight-last-color="onUpdateHighlightLastColor"
           @ask-ai-with-quote="onAskAiWithQuote"
           @search-with-quote="onSearchWithQuote"
           @open-dictionary-manage="showDictionaryManagePanel = true"

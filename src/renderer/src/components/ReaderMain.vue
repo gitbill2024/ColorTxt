@@ -163,7 +163,10 @@ import {
   type ReaderSurfaceColorEnabled,
   type ReaderSurfacePalette,
 } from "../constants/appUi";
-import { DEFAULT_HIGHLIGHT_COLORS_LIGHT } from "../constants/highlightColors";
+import {
+  DEFAULT_HIGHLIGHT_COLORS_LIGHT,
+  DEFAULT_HIGHLIGHT_LAST_COLOR,
+} from "../constants/highlightColors";
 import { DEFAULT_LINEATION_COLORS_LIGHT } from "../constants/lineationColors";
 import {
   DEFAULT_LINEATION_LAST_COLORS,
@@ -412,6 +415,7 @@ let removeHlGlobalListeners: (() => void) | null = null;
 let unsubModalStack: (() => void) | null = null;
 let removeVoiceReadKeyCapture: (() => void) | null = null;
 let removeSmartFormatReviewKeyCapture: (() => void) | null = null;
+let removeSelectionToolbarDigitKeyCapture: (() => void) | null = null;
 const builtInThemes = new Set(["vs", "vs-dark"]);
 /** 脚注/补全等溢出挂件容器（须带 `monaco-editor` + 主题类，否则挂到 body 后默认样式失效） */
 let readerMonacoOverflowHost: HTMLDivElement | null = null;
@@ -541,6 +545,8 @@ const props = withDefaults(
     /** 本书阅读器划线 / 笔记 */
     readerAnnotations?: ReaderAnnotationRecord[];
     lineationLastColors?: LineationLastColorPrefs;
+    /** 选区工具条高亮词上次选用的色槽索引 */
+    highlightLastColor?: number;
     /** 已打开文件路径；主窗无路径时不显示选区工具条（找书可关标注工具后仍显示） */
     readerFilePath?: string | null;
     /**
@@ -644,6 +650,7 @@ const props = withDefaults(
     highlightWordsByIndexBookOnly: undefined,
     readerAnnotations: () => [],
     lineationLastColors: () => ({ ...DEFAULT_LINEATION_LAST_COLORS }),
+    highlightLastColor: DEFAULT_HIGHLIGHT_LAST_COLOR,
     readerFilePath: null,
     showSelectionAnnotationTools: true,
     showSelectChapterMenuItem: true,
@@ -689,6 +696,7 @@ const emit = defineEmits<{
   updateLineationLastColor: [
     payload: { type: import("../stores/fileMetaStore").ReaderLineationType; colorIndex: number },
   ];
+  updateHighlightLastColor: [colorIndex: number];
   askAiWithQuote: [text: string];
   /** 选区工具条「查找」→ 侧栏全文搜索 */
   searchWithQuote: [text: string];
@@ -831,6 +839,8 @@ const readerAnn = useReaderAnnotations({
   model,
   readerAnnotations: () => props.readerAnnotations ?? [],
   lineationLastColors: () => props.lineationLastColors ?? DEFAULT_LINEATION_LAST_COLORS,
+  highlightLastColor: () =>
+    props.highlightLastColor ?? DEFAULT_HIGHLIGHT_LAST_COLOR,
   readerFilePath: () => props.readerFilePath,
   readerEditMode: () => props.readerEditMode === true,
   showSelectionAnnotationTools: () => props.showSelectionAnnotationTools !== false,
@@ -844,6 +854,8 @@ const readerAnn = useReaderAnnotations({
   emitUpsert: (ann) => emit("upsertReaderAnnotation", ann),
   emitRemove: (id) => emit("removeReaderAnnotation", id),
   emitUpdateLineationColor: (payload) => emit("updateLineationLastColor", payload),
+  emitUpdateHighlightLastColor: (colorIndex) =>
+    emit("updateHighlightLastColor", colorIndex),
   emitAddHighlightTerm: (payload) => emit("addHighlightTerm", payload),
   emitRemoveHighlightTerm: (payload) => emit("removeHighlightTerm", payload),
   emitAskAiWithQuote: (text) => emit("askAiWithQuote", text),
@@ -902,6 +914,7 @@ const {
   translatePopupRootRef,
   closeTranslatePopup,
   onToolbarAction,
+  onSelectionToolbarDigitKey,
   onHighlightPickConfirm,
   onHighlightPickRemove,
   onLineationPickConfirm,
@@ -4997,6 +5010,8 @@ onBeforeUnmount(() => {
   removeVoiceReadKeyCapture = null;
   removeSmartFormatReviewKeyCapture?.();
   removeSmartFormatReviewKeyCapture = null;
+  removeSelectionToolbarDigitKeyCapture?.();
+  removeSelectionToolbarDigitKeyCapture = null;
   disposeAnnotationDecorations();
   editor.value?.dispose();
   model.value?.dispose();
@@ -5084,6 +5099,23 @@ watch(readerClickTurnPageActive, (active) => {
   if (!active) endClickModePointerGesture(false);
   applyReaderClickModeMouseStyle();
 });
+
+watch(
+  () =>
+    !props.readerEditMode && props.showSelectionAnnotationTools !== false,
+  (enabled) => {
+    removeSelectionToolbarDigitKeyCapture?.();
+    removeSelectionToolbarDigitKeyCapture = null;
+    if (!enabled) return;
+    const onKey = (ev: KeyboardEvent) => {
+      onSelectionToolbarDigitKey(ev);
+    };
+    document.addEventListener("keydown", onKey, true);
+    removeSelectionToolbarDigitKeyCapture = () =>
+      document.removeEventListener("keydown", onKey, true);
+  },
+  { immediate: true },
+);
 
 watch(
   () => props.voiceReadScrollLocked,

@@ -27,7 +27,10 @@ import {
 } from "../services/settingsPersistMerge";
 
 export type { TxtFileItem };
-import { parseHighlightColorsArray } from "../constants/highlightColors";
+import {
+  parseHighlightColorsArray,
+  parseHighlightLastColor,
+} from "../constants/highlightColors";
 import { parseLineationColorsArray } from "../constants/lineationColors";
 import { parseLineationLastColors } from "../constants/annotationColors";
 import {
@@ -207,6 +210,8 @@ export type PersistedSettingsData = {
   highlightWordsByIndexGlobal?: HighlightWordsByIndex;
   /** 划线（马克笔/波浪/直线）各自上次选用的 5 色索引 */
   lineationLastColors?: import("../constants/annotationColors").LineationLastColorPrefs;
+  /** 选区工具条高亮词上次选用的色槽索引 */
+  highlightLastColor?: number;
   /**
    * 电子书转换输出目录：空字符串表示与源书同目录。
    * 非空时为绝对路径。若设置 JSON 中无此键，应用默认使用 `userData/ConvertedTxt`。
@@ -622,6 +627,9 @@ export function loadPersistedSettingsData(
   }
   if (obj.lineationLastColors != null && typeof obj.lineationLastColors === "object") {
     data.lineationLastColors = parseLineationLastColors(obj.lineationLastColors);
+  }
+  if (obj.highlightLastColor != null) {
+    data.highlightLastColor = parseHighlightLastColor(obj.highlightLastColor);
   }
   const globalHl = normalizeHighlightWordsByIndex(
     obj.highlightWordsByIndexGlobal,

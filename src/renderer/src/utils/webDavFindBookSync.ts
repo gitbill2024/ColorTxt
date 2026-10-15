@@ -85,6 +85,7 @@ const UI_READER_KEYS = [
   "lineationColorsLight",
   "lineationColorsDark",
   "lineationLastColors",
+  "highlightLastColor",
   "voiceRead",
 ] as const;
 

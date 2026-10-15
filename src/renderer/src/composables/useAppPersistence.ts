@@ -84,8 +84,11 @@ import {
 import {
   DEFAULT_HIGHLIGHT_COLORS_DARK,
   DEFAULT_HIGHLIGHT_COLORS_LIGHT,
+  DEFAULT_HIGHLIGHT_LAST_COLOR,
+  clampHighlightLastColorToCount,
   mergeHighlightColors,
   parseHighlightColorsArray,
+  parseHighlightLastColor,
 } from "../constants/highlightColors";
 import {
   DEFAULT_LINEATION_COLORS_DARK,
@@ -313,6 +316,7 @@ export function useAppPersistence(deps: {
   lineationColorsDark: Ref<string[]>;
   highlightWordsByIndexGlobal: Ref<HighlightWordsByIndex | undefined>;
   lineationLastColors: Ref<LineationLastColorPrefs>;
+  highlightLastColor: Ref<number>;
   /** 电子书转换输出目录；空字符串表示与源文件同目录；无持久化键时默认 userData/ConvertedTxt */
   ebookConvertOutputDir: Ref<string>;
   /** 彩读书包解压目录；空串运行时回退 userData/UnpackedBooks；无键时首次写入默认路径 */
@@ -486,6 +490,10 @@ export function useAppPersistence(deps: {
           DEFAULT_LINEATION_LAST_COLORS.straight
           ? undefined
           : { ...deps.lineationLastColors.value },
+      highlightLastColor:
+        deps.highlightLastColor.value === DEFAULT_HIGHLIGHT_LAST_COLOR
+          ? undefined
+          : deps.highlightLastColor.value,
       ebookConvertOutputDir: deps.ebookConvertOutputDir.value,
       bookPackUnpackDir: deps.bookPackUnpackDir.value.trim(),
       bookPackPassword: deps.bookPackPassword.value,
@@ -1504,6 +1512,11 @@ export function useAppPersistence(deps: {
     deps.lineationLastColors.value = clampLineationLastColorsToCount(
       parseLineationLastColors(data.lineationLastColors),
       deps.lineationColorsLight.value.length,
+    );
+
+    deps.highlightLastColor.value = clampHighlightLastColorToCount(
+      parseHighlightLastColor(data.highlightLastColor),
+      deps.highlightColorsLight.value.length,
     );
 
     const normalizedRules = normalizeLoadedChapterRules(data.chapterRules);
