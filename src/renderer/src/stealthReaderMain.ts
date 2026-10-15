@@ -1,6 +1,6 @@
 import { createApp } from "vue";
 import StealthReaderApp from "./StealthReaderApp.vue";
-import { ensureSystemFontCatalog } from "./utils/systemFontCatalog";
+import { bootstrapSystemFontFacePins } from "./utils/systemFontCatalog";
 
-void ensureSystemFontCatalog();
+void bootstrapSystemFontFacePins();
 createApp(StealthReaderApp).mount("#app");

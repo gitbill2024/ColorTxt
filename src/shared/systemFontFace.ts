@@ -1,8 +1,8 @@
 /**
- * 系统字体按字重拆开展示。
- * 只列字体族时，同一族的常规 / 粗体 / 细体会合成一项，浏览器再按 font-weight 挑一款；
- * 不少中文字体的字重元数据并不准确，结果会偏粗或偏细。
- * 多字重族改为「族名 + 字重」，并用 @font-face local() 锁到具体 PostScript / 全名。
+ * 系统字体列表：默认只列字体族；可选按字重拆开。
+ * 列表预览用真实系统族名 + font-weight（即时渲染）；
+ * 展示文案可带「细体 / 中等」后缀。
+ * 同族多字重选中时才用别名 + @font-face 锁到具体文件。
  */
 
 export type RawSystemFontFace = {
@@ -15,16 +15,35 @@ export type RawSystemFontFace = {
   /** 同族内排序；各平台量纲可以不同 */
   weight: number;
   italic: boolean;
+  /** Windows GlyphTypeface.FontUri 等 file:// 路径；渲染前会换成 colortxt-local */
+  fileUrl?: string;
+  /** 绝对路径；重启后重新 register colortxt-local 用（与 fileUrl 并存） */
+  filePath?: string;
 };
 
 export type ListedSystemFont = {
-  /** 列表展示名，同时作为 CSS font-family */
-  name: string;
+  /** 列表展示文案（可含字重后缀） */
+  label: string;
+  /** 稳定族名（跨「字体族 / 区分字重」模式匹配用，不含字重后缀） */
+  family: string;
+  /** 列表预览用真实系统族名 */
+  previewFamily: string;
+  /** 列表预览用 CSS font-weight（约 100–900） */
+  previewWeight: number;
+  /**
+   * 选中后写入设置的 font-family。
+   * 等于 previewFamily 时直接用系统族；否则为锁字重别名，需 @font-face。
+   */
+  cssFamily: string;
   /**
    * 非空时注入 @font-face，用这些名字做 local()。
-   * 空数组表示只有一款，直接用族名，与旧行为一致。
+   * 仅当 cssFamily 为别名时需要。
    */
   locals: string[];
+  /** 有值时 @font-face 优先用 url()（通常为 colortxt-local） */
+  fileUrl?: string;
+  /** 绝对路径，供 pin 缓存跨启动重新注册 */
+  filePath?: string;
 };
 
 type ListedInternal = ListedSystemFont & {
@@ -32,6 +51,11 @@ type ListedInternal = ListedSystemFont & {
   rank: number;
   italic: boolean;
 };
+
+/** 是否需要为选中项注入 @font-face 别名 */
+export function listedFontNeedsFacePin(font: ListedSystemFont): boolean {
+  return font.cssFamily !== font.previewFamily;
+}
 
 const WEIGHT_WORDS: Record<string, { zh: string; rank: number }> = {
   hairline: { zh: "极细", rank: 100 },
@@ -126,24 +150,81 @@ function chineseStyleRank(style: string, weight: number): number {
   return best || (weight > 0 ? weight : 400);
 }
 
+function appendItalicLabel(text: string, italic: boolean): string {
+  if (!italic) return text;
+  if (/斜|italic|oblique/i.test(text)) return text;
+  return text ? `${text} 斜体` : "斜体";
+}
+
+/**
+ * 样式名是货号 / W3 这类代号时，不宜直接拼进展示名
+ * （族名里往往已有 101、201；应改用 OpenType 字重译名）。
+ */
+function isUnhelpfulStyleLabel(label: string): boolean {
+  const t = label.trim();
+  if (!t) return true;
+  if (/^\d+$/.test(t)) return true;
+  if (/^w\d+$/i.test(t)) return true;
+  return false;
+}
+
+/**
+ * 由 OpenType / CSS 字重近似到中文标签（对齐资源管理器常见叫法）。
+ * 仅接受 ≥100 的 OpenType 量纲；macOS 的 0–15 不算，避免误标。
+ */
+function openTypeWeightSuffix(
+  weight: number,
+  italic: boolean,
+): { text: string; rank: number } | null {
+  if (!(weight >= 100)) {
+    return italic ? { text: "斜体", rank: 400 } : null;
+  }
+  let text: string;
+  let rank: number;
+  if (weight <= 150) {
+    text = "极细";
+    rank = 100;
+  } else if (weight <= 250) {
+    text = "特细";
+    rank = 200;
+  } else if (weight <= 350) {
+    text = "细体";
+    rank = 300;
+  } else if (weight <= 450) {
+    text = "常规";
+    rank = 400;
+  } else if (weight <= 550) {
+    text = "中等";
+    rank = 500;
+  } else if (weight <= 650) {
+    text = "半粗体";
+    rank = 600;
+  } else if (weight <= 750) {
+    text = "粗体";
+    rank = 700;
+  } else if (weight <= 850) {
+    text = "特粗";
+    rank = 850;
+  } else {
+    text = "超粗";
+    rank = 900;
+  }
+  return { text: appendItalicLabel(text, italic), rank };
+}
+
 function styleSuffix(
   style: string,
   italic: boolean,
   weight: number,
 ): { text: string; rank: number } {
   const trimmed = style.trim();
-  const appendItalic = (text: string): string => {
-    if (!italic) return text;
-    if (/斜|italic|oblique/i.test(text)) return text;
-    return text ? `${text} 斜体` : "斜体";
-  };
 
   if (!trimmed) {
     return { text: italic ? "斜体" : "", rank: 400 };
   }
   if (hasCjk(trimmed)) {
     return {
-      text: appendItalic(trimmed),
+      text: appendItalicLabel(trimmed, italic),
       rank: chineseStyleRank(trimmed, weight),
     };
   }
@@ -169,7 +250,7 @@ function styleSuffix(
       continue;
     }
     return {
-      text: appendItalic(trimmed),
+      text: appendItalicLabel(trimmed, italic),
       rank: weight > 0 ? weight : 400,
     };
   }
@@ -182,6 +263,131 @@ function styleSuffix(
   ];
   if (sawItalic || italic) pieces.push("斜体");
   return { text: pieces.join(" "), rank };
+}
+
+/** Win32 常把 Light/SemiBold 也标成 Regular/Bold，需改信 OpenType 字重。 */
+function isGenericFaceStyle(style: string): boolean {
+  return /^(regular|normal|roman|book|bold)$/i.test(style.trim());
+}
+
+/**
+ * 解析展示用字重后缀。
+ * Regular@300 → 细体；Bold@600 → 半粗体；货号样式 → 按字重；W3 等仍保留原文。
+ */
+function resolveFaceSuffix(
+  face: RawSystemFontFace,
+): { text: string; rank: number } | null {
+  const fromWeight = openTypeWeightSuffix(face.weight, face.italic);
+  const fromStyle = styleSuffix(face.style, face.italic, face.weight);
+  if (fromWeight && isGenericFaceStyle(face.style)) {
+    return fromWeight;
+  }
+  if (fromStyle.text && !isUnhelpfulStyleLabel(fromStyle.text)) {
+    return fromStyle;
+  }
+  if (fromWeight) return fromWeight;
+  return fromStyle.text ? fromStyle : null;
+}
+
+/**
+ * WPF 常对同一 Win32 style 再挂合成粗体 / 斜体；
+ * 按 style 合并后优先正体、再取最轻设计字重。
+ */
+function collapseLikelySimulatedFaces(
+  faces: RawSystemFontFace[],
+): RawSystemFontFace[] {
+  const groups = new Map<string, RawSystemFontFace[]>();
+  for (const face of faces) {
+    const key = face.style.toLowerCase();
+    const list = groups.get(key);
+    if (list) list.push(face);
+    else groups.set(key, [face]);
+  }
+  const out: RawSystemFontFace[] = [];
+  for (const group of groups.values()) {
+    if (group.length === 1) {
+      out.push(group[0]!);
+      continue;
+    }
+    group.sort(
+      (a, b) =>
+        Number(a.italic) - Number(b.italic) ||
+        a.weight - b.weight ||
+        a.postscriptName.localeCompare(b.postscriptName),
+    );
+    out.push(group[0]!);
+  }
+  return out;
+}
+
+function normalizeFontFileUrl(raw: string | undefined): string | undefined {
+  const trimmed = raw?.trim();
+  if (!trimmed) return undefined;
+  try {
+    return new URL(trimmed).href;
+  } catch {
+    return trimmed;
+  }
+}
+
+function previewWeightFromRank(rank: number, faceWeight: number): number {
+  if (rank >= 100 && rank <= 1000) return rank;
+  if (faceWeight >= 100 && faceWeight <= 1000) return faceWeight;
+  return 400;
+}
+
+/** 同族多字重：展示带后缀，预览用真实族+字重，选中用别名锁文件 */
+function pinnedFaceEntry(
+  family: string,
+  face: RawSystemFontFace,
+  suffix: { text: string; rank: number },
+): ListedInternal | null {
+  if (!suffix.text) return null;
+  let locals = faceLocals(face);
+  const fileUrl = normalizeFontFileUrl(face.fileUrl);
+  if (locals.length === 0 && !fileUrl) locals = [family];
+  if (family === suffix.text || family.endsWith(` ${suffix.text}`)) {
+    return familyEntry(family);
+  }
+  const label = `${family} ${suffix.text}`;
+  const filePath = face.filePath?.trim() || undefined;
+  return {
+    label,
+    previewFamily: family,
+    previewWeight: previewWeightFromRank(suffix.rank, face.weight),
+    cssFamily: label,
+    locals,
+    fileUrl,
+    ...(filePath ? { filePath } : {}),
+    family,
+    rank: suffix.rank,
+    italic: face.italic || /斜/.test(suffix.text),
+  };
+}
+
+/** 单设计字重：后缀仅作文案，预览与选中都用真实族名（即时、无 @font-face） */
+function labeledFamilyEntry(
+  family: string,
+  face: RawSystemFontFace,
+): ListedInternal {
+  const suffix = resolveFaceSuffix(face);
+  if (
+    !suffix?.text ||
+    family === suffix.text ||
+    family.endsWith(` ${suffix.text}`)
+  ) {
+    return familyEntry(family);
+  }
+  return {
+    label: `${family} ${suffix.text}`,
+    previewFamily: family,
+    previewWeight: previewWeightFromRank(suffix.rank, face.weight),
+    cssFamily: family,
+    locals: [],
+    family,
+    rank: suffix.rank,
+    italic: face.italic || /斜/.test(suffix.text),
+  };
 }
 
 function normalizeFace(face: RawSystemFontFace): RawSystemFontFace | null {
@@ -202,6 +408,11 @@ function normalizeFace(face: RawSystemFontFace): RawSystemFontFace | null {
         ? face.weight
         : 0,
     italic: Boolean(face.italic),
+    fileUrl: normalizeFontFileUrl(face.fileUrl),
+    filePath:
+      typeof face.filePath === "string" && face.filePath.trim()
+        ? face.filePath.trim()
+        : undefined,
   };
 }
 
@@ -234,10 +445,21 @@ function dedupeFaces(faces: RawSystemFontFace[]): RawSystemFontFace[] {
 }
 
 function familyEntry(family: string): ListedInternal {
-  return { name: family, locals: [], family, rank: 0, italic: false };
+  return {
+    label: family,
+    previewFamily: family,
+    previewWeight: 400,
+    cssFamily: family,
+    locals: [],
+    family,
+    rank: 0,
+    italic: false,
+  };
 }
 
-export function familyNamesToRawFaces(names: string[]): RawSystemFontFace[] {
+export function familyNamesToRawFaces(
+  names: readonly string[],
+): RawSystemFontFace[] {
   const seen = new Set<string>();
   const out: RawSystemFontFace[] = [];
   for (const name of names) {
@@ -256,9 +478,31 @@ export function familyNamesToRawFaces(names: string[]): RawSystemFontFace[] {
   return out;
 }
 
-export function buildListedSystemFonts(
+/**
+ * WPF / 平台枚举常漏掉仅注册在 GDI 的中文字体（方正、华康等）。
+ * 用 font-list 族名补齐缺失项，已有 face 保留字重信息。
+ */
+export function mergeLegacyFamilyNames(
+  faces: readonly RawSystemFontFace[],
+  legacyNames: readonly string[],
+): RawSystemFontFace[] {
+  const seen = new Set<string>();
+  for (const face of faces) {
+    const family = face.family.trim();
+    if (family) seen.add(family);
+  }
+  if (seen.size === 0) return familyNamesToRawFaces(legacyNames);
+  const missing = legacyNames.filter((name) => {
+    const family = name.trim();
+    return family.length > 0 && !seen.has(family);
+  });
+  if (missing.length === 0) return [...faces];
+  return [...faces, ...familyNamesToRawFaces(missing)];
+}
+
+function groupFacesByFamily(
   raw: readonly RawSystemFontFace[],
-): ListedSystemFont[] {
+): Map<string, RawSystemFontFace[]> {
   const groups = new Map<string, RawSystemFontFace[]>();
   for (const item of raw) {
     const face = normalizeFace(item);
@@ -267,46 +511,25 @@ export function buildListedSystemFonts(
     if (list) list.push(face);
     else groups.set(face.family, [face]);
   }
+  return groups;
+}
 
-  const listed: ListedInternal[] = [];
-  for (const [family, faces] of groups) {
-    const unique = dedupeFaces(faces);
-    if (unique.length <= 1) {
-      listed.push(familyEntry(family));
-      continue;
-    }
-    const pinned: ListedInternal[] = [];
-    for (const face of unique) {
-      const locals = faceLocals(face);
-      if (locals.length === 0) continue;
-      const suffix = styleSuffix(face.style, face.italic, face.weight);
-      if (!suffix.text) continue;
-      pinned.push({
-        name: `${family} ${suffix.text}`,
-        locals,
-        family,
-        rank: suffix.rank,
-        italic: face.italic || /斜/.test(suffix.text),
-      });
-    }
-    if (pinned.length <= 1) {
-      listed.push(familyEntry(family));
-      continue;
-    }
-    listed.push(...pinned);
-  }
-
+function finalizeListed(listed: ListedInternal[]): ListedSystemFont[] {
   const counts = new Map<string, number>();
   for (const item of listed) {
-    counts.set(item.name, (counts.get(item.name) ?? 0) + 1);
+    counts.set(item.label, (counts.get(item.label) ?? 0) + 1);
   }
   const seen = new Map<string, number>();
   for (const item of listed) {
-    if ((counts.get(item.name) ?? 0) < 2) continue;
-    const n = (seen.get(item.name) ?? 0) + 1;
-    seen.set(item.name, n);
-    const tag = item.locals[0] || String(n);
-    item.name = `${item.name} (${tag})`;
+    if ((counts.get(item.label) ?? 0) < 2) continue;
+    const n = (seen.get(item.label) ?? 0) + 1;
+    seen.set(item.label, n);
+    const tag = item.locals[0] || item.cssFamily || String(n);
+    const suffix = ` (${tag})`;
+    item.label = `${item.label}${suffix}`;
+    if (listedFontNeedsFacePin(item)) {
+      item.cssFamily = `${item.cssFamily}${suffix}`;
+    }
   }
 
   listed.sort((a, b) => {
@@ -314,25 +537,98 @@ export function buildListedSystemFonts(
     if (byFamily !== 0) return byFamily;
     if (a.rank !== b.rank) return a.rank - b.rank;
     if (a.italic !== b.italic) return a.italic ? 1 : -1;
-    return a.name.localeCompare(b.name, "zh-Hans-CN");
+    return a.label.localeCompare(b.label, "zh-Hans-CN");
   });
 
-  return listed.map(({ name, locals }) => ({ name, locals }));
+  return listed.map(
+    ({
+      label,
+      family,
+      previewFamily,
+      previewWeight,
+      cssFamily,
+      locals,
+      fileUrl,
+      filePath,
+    }) => ({
+      label,
+      family,
+      previewFamily,
+      previewWeight,
+      cssFamily,
+      locals,
+      ...(fileUrl ? { fileUrl } : {}),
+      ...(filePath ? { filePath } : {}),
+    }),
+  );
 }
 
 /**
- * 只声明 font-weight: normal，阅读器的常规字重命中这一款；
- * 摸鱼「加粗」仍可在这款上做合成粗体，而不会跳到族里另一款。
+ * 不区分字重：每个族一行，只显示族名（与启用字重拆分前一致，不加后缀）。
+ */
+export function buildCollapsedSystemFonts(
+  raw: readonly RawSystemFontFace[],
+): ListedSystemFont[] {
+  const listed: ListedInternal[] = [];
+  for (const [family] of groupFacesByFamily(raw)) {
+    listed.push(familyEntry(family));
+  }
+  return finalizeListed(listed);
+}
+
+/** 折叠列表的展示文案（默认「不区分字重」）。 */
+export function buildSystemFontFamilyNames(
+  raw: readonly RawSystemFontFace[],
+): string[] {
+  return buildCollapsedSystemFonts(raw).map((font) => font.label);
+}
+
+/** 按字重拆开展示（「区分字重」开启时）。 */
+export function buildListedSystemFonts(
+  raw: readonly RawSystemFontFace[],
+): ListedSystemFont[] {
+  const listed: ListedInternal[] = [];
+  for (const [family, faces] of groupFacesByFamily(raw)) {
+    const unique = collapseLikelySimulatedFaces(dedupeFaces(faces));
+    if (unique.length <= 1) {
+      const only = unique[0];
+      listed.push(only ? labeledFamilyEntry(family, only) : familyEntry(family));
+      continue;
+    }
+    const pinned: ListedInternal[] = [];
+    for (const face of unique) {
+      const suffix = resolveFaceSuffix(face);
+      if (!suffix) continue;
+      const entry = pinnedFaceEntry(family, face, suffix);
+      if (entry && (entry.locals.length > 0 || entry.fileUrl)) pinned.push(entry);
+    }
+    if (pinned.length <= 1) {
+      const only = unique[0]!;
+      listed.push(labeledFamilyEntry(family, only));
+      continue;
+    }
+    listed.push(...pinned);
+  }
+  return finalizeListed(listed);
+}
+
+/**
+ * 仅为需要锁字重的别名生成 @font-face（font-weight: normal）。
+ * 列表预览不走这里，避免异步加载闪烁。
  */
 export function buildSystemFontFaceCss(fonts: readonly ListedSystemFont[]): string {
   const rules: string[] = [];
   for (const font of fonts) {
-    if (font.locals.length === 0) continue;
-    const src = font.locals
-      .map((name) => `local(${quoteCssFamily(name)})`)
-      .join(",");
+    if (!listedFontNeedsFacePin(font)) continue;
+    const srcParts: string[] = [];
+    const fileUrl = normalizeFontFileUrl(font.fileUrl);
+    if (fileUrl) srcParts.push(`url(${JSON.stringify(fileUrl)})`);
+    for (const name of font.locals) {
+      srcParts.push(`local(${quoteCssFamily(name)})`);
+    }
+    if (srcParts.length === 0) continue;
     rules.push(
-      `@font-face{font-family:${quoteCssFamily(font.name)};src:${src};font-weight:normal;font-style:normal;font-display:swap;}`,
+      `@font-face{font-family:${quoteCssFamily(font.cssFamily)};src:${srcParts.join(",")};font-weight:normal;font-style:normal;font-display:swap;}`,
     );
   }
   return rules.join("\n");

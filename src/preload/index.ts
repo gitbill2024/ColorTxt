@@ -715,8 +715,15 @@ const api = {
   },
   setNativeTheme: (theme: string) => ipcRenderer.send("theme:set", theme),
   getPathForFile: (file: File) => webUtils.getPathForFile(file),
-  listSystemFonts: () =>
-    ipcRenderer.invoke("fonts:listSystemFonts") as Promise<RawSystemFontFace[]>,
+  listSystemFonts: (opts?: { force?: boolean }) =>
+    ipcRenderer.invoke("fonts:listSystemFonts", opts) as Promise<
+      RawSystemFontFace[]
+    >,
+  /** 把绝对路径重新注册为 colortxt-local URL（启动恢复字重 pin 用） */
+  registerFontFilePaths: (paths: string[]) =>
+    ipcRenderer.invoke("fonts:registerFontFilePaths", paths) as Promise<
+      Record<string, string>
+    >,
   /** 解析当前用户终端默认字体族名（Windows Terminal / 控制台 FaceName / 平台回退）。 */
   getTerminalDefaultFontFace: () =>
     ipcRenderer.invoke("fonts:getTerminalDefaultFace") as Promise<string | null>,

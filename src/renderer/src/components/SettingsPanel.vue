@@ -83,6 +83,9 @@ import {
   defaultTxtrDelimitedMatchCrossLine,
   maxLineHeightMultipleForFontSize,
   persistKey,
+  fontPickerDistinguishWeightsKey,
+  fontPickerListModeResetEvent,
+  systemFontFacePinsKey,
   skipUnloadPersistenceSessionKey,
   APP_DISPLAY_NAME,
   type ChapterTitleBlankMode,
@@ -640,6 +643,12 @@ function resetReadingDraft() {
   draftTimedScrollRange.value = defaultTimedScrollRange;
   draftTimedScrollIntervalMs.value = defaultTimedScrollIntervalMs;
   draftSelectionToolbarButtons.value = { ...defaultSelectionToolbarButtons };
+  try {
+    localStorage.setItem(fontPickerDistinguishWeightsKey, "0");
+  } catch {
+    /* ignore */
+  }
+  window.dispatchEvent(new Event(fontPickerListModeResetEvent));
 }
 
 function resetEditDraft() {
@@ -975,9 +984,24 @@ async function onClearCache() {
       // 保留原 settings 字符串
     }
   }
+  /** 与界面设置同类的独立 UI 偏好，清缓存后仍保留 */
+  let savedFontListMode: string | null = null;
+  let savedFontPins: string | null = null;
+  try {
+    savedFontListMode = localStorage.getItem(fontPickerDistinguishWeightsKey);
+    savedFontPins = localStorage.getItem(systemFontFacePinsKey);
+  } catch {
+    /* ignore */
+  }
   try {
     localStorage.clear();
     if (saved !== null) localStorage.setItem(persistKey, saved);
+    if (savedFontListMode !== null) {
+      localStorage.setItem(fontPickerDistinguishWeightsKey, savedFontListMode);
+    }
+    if (savedFontPins !== null) {
+      localStorage.setItem(systemFontFacePinsKey, savedFontPins);
+    }
   } catch {
     // ignore
   }

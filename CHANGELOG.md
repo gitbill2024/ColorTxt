@@ -3,11 +3,11 @@
 改进：
 
 - 「设置 → AI 阅读助手 → 对话模型」支持手动输入模型 ID（部分服务商没有提供模型查询接口） [#100](https://github.com/ssnangua/ColorTxt/issues/100)，[#101](https://github.com/ssnangua/ColorTxt/pull/101)
-- 系统字体列表会区分同一字体的不同字重（常规、粗体、细体等），选中后按该字重显示 [#93](https://github.com/ssnangua/ColorTxt/issues/93)
+- 系统字体列表：可切换「字体族 / 区分字重」 [#93](https://github.com/ssnangua/ColorTxt/issues/93)
 
 修复：
 
-- **Edge TTS** 朗读报错 `Unexpected server response: 403`：微软已要求 **Sec-MS-GEC v2** 握手令牌，旧版 v1 被拒绝
+- **Edge TTS** 朗读报错 `403`：微软已要求 **Sec-MS-GEC v2** 握手令牌，旧版 v1 被拒绝
 - (Mac) 退出全屏模式阅读进度异常 [#99](https://github.com/ssnangua/ColorTxt/issues/99)
 - (Mac) 摸鱼模式：
   - 鼠标移到摸鱼窗口边缘时，会显示为调整窗口大小的光标

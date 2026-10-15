@@ -100,6 +100,17 @@ export const persistedSettingsChangedEvent = "colortxt:persisted-settings-change
 /** 「书包密码」弹框「显示密码」勾选（`"1"` / 其它） */
 export const bookPackPromptShowPasswordKey =
   "colorTxt.ui.bookPackPromptShowPassword";
+/** 系统字体列表：区分字重（`"1"`）/ 字体族（其它） */
+export const fontPickerDistinguishWeightsKey =
+  "colorTxt.ui.fontPickerDistinguishWeights";
+/** 「重置当前页」等恢复默认时派发，FontPicker 收听后回到「字体族」 */
+export const fontPickerListModeResetEvent =
+  "colortxt:font-picker-list-mode-reset";
+/**
+ * 字重别名 @font-face 的 pin 缓存（JSON：`cssFamily → { locals, filePath? }`）。
+ * 启动时只恢复缓存，避免全量枚举系统字体。
+ */
+export const systemFontFacePinsKey = "colorTxt.ui.systemFontFacePins";
 export const sessionKey = "colorTxt.session";
 export const fileListKey = "colorTxt.file.list";
 export const recentFilesKey = "colorTxt.recent.files";

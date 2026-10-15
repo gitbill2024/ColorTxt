@@ -1,4 +1,7 @@
 import { spawn } from "node:child_process";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import {
   type RawSystemFontFace,
 } from "@shared/systemFontFace";
@@ -46,6 +49,7 @@ function parseFaceTsv(stdout: string): RawSystemFontFace[] {
     const family = parts[0]?.trim() ?? "";
     if (!family) continue;
     const localJoined = parts[3] ?? "";
+    const fileUrl = (parts[6] ?? "").trim();
     faces.push({
       family,
       style: (parts[1] ?? "").trim(),
@@ -56,6 +60,7 @@ function parseFaceTsv(stdout: string): RawSystemFontFace[] {
         .filter((name) => name.length > 0),
       weight: Number(parts[4]) || 0,
       italic: (parts[5] ?? "").trim() === "1",
+      ...(fileUrl ? { fileUrl } : {}),
     });
   }
   return faces;
@@ -213,10 +218,13 @@ const WINDOWS_PS = [
   "    }",
   "    $weight = 400",
   "    try { $weight = [int]$tf.Weight.ToOpenTypeWeight() } catch { $weight = 400 }",
+  '    $fileUrl = ""',
+  "    try { $fileUrl = Esc ([string]$gt.FontUri) } catch { $fileUrl = \"\" }",
   "    $locals = @()",
+  "    if ($localFamily) { $locals += $localFamily }",
   "    if ($localFamily -and $face) {",
   '      $joined = Esc "$localFamily $face"',
-  "      if ($joined) { $locals += $joined }",
+  "      if ($joined -and ($locals -notcontains $joined)) { $locals += $joined }",
   "    }",
   "    if ($family -and $face) {",
   '      $joined = Esc "$family $face"',
@@ -224,18 +232,32 @@ const WINDOWS_PS = [
   "    }",
   '    $localJoined = ($locals -join "|")',
   '    $ital = $(if ($italic) { "1" } else { "0" })',
-  '    [Console]::Out.WriteLine("$family`t$face`t`t$localJoined`t$weight`t$ital")',
+  '    [Console]::Out.WriteLine("$family`t$face`t`t$localJoined`t$weight`t$ital`t$fileUrl")',
   "  }",
   "}",
 ].join("\n");
 
+/**
+ * 经 stdin + `-Command -` 时，本机 PowerShell 常返回空 stdout（exit 0），
+ * 主进程会退回 font-list 族名从而丢失字重元数据。改为临时脚本 + `-File`。
+ */
 async function listWindowsFaces(): Promise<RawSystemFontFace[]> {
-  const stdout = await runCommand(
-    "powershell.exe",
-    ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", "-"],
-    WINDOWS_PS,
-  );
-  return parseFaceTsv(stdout);
+  const dir = await mkdtemp(path.join(tmpdir(), "colortxt-fonts-"));
+  const scriptPath = path.join(dir, "list-faces.ps1");
+  try {
+    await writeFile(scriptPath, WINDOWS_PS, "utf8");
+    const stdout = await runCommand("powershell.exe", [
+      "-NoProfile",
+      "-NonInteractive",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      scriptPath,
+    ]);
+    return parseFaceTsv(stdout);
+  } finally {
+    await rm(dir, { recursive: true, force: true }).catch(() => undefined);
+  }
 }
 
 async function listLinuxFaces(): Promise<RawSystemFontFace[]> {
