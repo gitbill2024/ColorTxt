@@ -1493,8 +1493,42 @@ export function useReaderAnnotations(opts: {
   }
 
   /**
-   * 只读选区工具条数字快捷键：1 高亮词切换 / 2–4 划线切换 / 5 笔记。
-   * 命中时 preventDefault + stopPropagation；未命中返回 false。
+   * 按钮未展示时快捷键不生效（与工具条 v-if 一致）。
+   * `1` 复制 / `2` 高亮词 / `3`–`5` 划线 / `6` 笔记 / `7` 查找 / `8` 词典 / `9` 翻译 / `0` 问 AI
+   */
+  function isSelectionToolbarDigitEnabled(
+    digit: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9,
+  ): boolean {
+    const b = opts.selectionToolbarButtons();
+    if (digit === 1) return b.copy;
+    if (digit === 2) {
+      return canUseSelectionAnnotationTools() && opts.monacoCustomHighlight();
+    }
+    if (digit === 3 || digit === 4 || digit === 5 || digit === 6) {
+      return canUseSelectionAnnotationTools();
+    }
+    if (digit === 7) return b.find;
+    if (digit === 8) return b.dictionary;
+    if (digit === 9) return b.translate;
+    return opts.aiFeaturesEnabled() && b.askAi;
+  }
+
+  function runToolbarActionFromShortcut(
+    action: "copy" | "find" | "dictionary" | "translate" | "askAi" | "note",
+  ): boolean {
+    if (!ensureDraftForShortcut()) return false;
+    if (action === "note") {
+      openNotePanelFromToolbar();
+      return true;
+    }
+    if (!draftText.value.trim()) return false;
+    onToolbarAction(action);
+    return true;
+  }
+
+  /**
+   * 只读选区工具条数字快捷键（见 {@link isSelectionToolbarDigitEnabled}）。
+   * 命中且按钮启用时 preventDefault + stopPropagation；否则返回 false。
    */
   function onSelectionToolbarDigitKey(ev: KeyboardEvent): boolean {
     if (ev.defaultPrevented) return false;
@@ -1507,27 +1541,42 @@ export function useReaderAnnotations(opts: {
     if (!canUseSelectionToolbarDigitShortcut()) return false;
 
     const code = ev.code;
-    let digit: 1 | 2 | 3 | 4 | 5 | null = null;
-    if (code === "Digit1" || code === "Numpad1") digit = 1;
+    let digit: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | null = null;
+    if (code === "Digit0" || code === "Numpad0") digit = 0;
+    else if (code === "Digit1" || code === "Numpad1") digit = 1;
     else if (code === "Digit2" || code === "Numpad2") digit = 2;
     else if (code === "Digit3" || code === "Numpad3") digit = 3;
     else if (code === "Digit4" || code === "Numpad4") digit = 4;
     else if (code === "Digit5" || code === "Numpad5") digit = 5;
+    else if (code === "Digit6" || code === "Numpad6") digit = 6;
+    else if (code === "Digit7" || code === "Numpad7") digit = 7;
+    else if (code === "Digit8" || code === "Numpad8") digit = 8;
+    else if (code === "Digit9" || code === "Numpad9") digit = 9;
     else return false;
+
+    if (!isSelectionToolbarDigitEnabled(digit)) return false;
 
     let handled = false;
     if (digit === 1) {
-      handled = toggleHighlightFromShortcut();
+      handled = runToolbarActionFromShortcut("copy");
     } else if (digit === 2) {
-      handled = toggleLineationFromShortcut("marker");
+      handled = toggleHighlightFromShortcut();
     } else if (digit === 3) {
-      handled = toggleLineationFromShortcut("wavy");
+      handled = toggleLineationFromShortcut("marker");
     } else if (digit === 4) {
+      handled = toggleLineationFromShortcut("wavy");
+    } else if (digit === 5) {
       handled = toggleLineationFromShortcut("straight");
+    } else if (digit === 6) {
+      handled = runToolbarActionFromShortcut("note");
+    } else if (digit === 7) {
+      handled = runToolbarActionFromShortcut("find");
+    } else if (digit === 8) {
+      handled = runToolbarActionFromShortcut("dictionary");
+    } else if (digit === 9) {
+      handled = runToolbarActionFromShortcut("translate");
     } else {
-      if (!ensureDraftForShortcut()) return false;
-      openNotePanelFromToolbar();
-      handled = true;
+      handled = runToolbarActionFromShortcut("askAi");
     }
 
     if (!handled) return false;

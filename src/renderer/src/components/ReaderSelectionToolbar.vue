@@ -150,9 +150,9 @@ const lineationActions: Array<{
   type: ReaderLineationType;
   shortcut: string;
 }> = [
-  { id: "marker", label: "马克笔", type: "marker", shortcut: "2" },
-  { id: "wavy", label: "波浪线", type: "wavy", shortcut: "3" },
-  { id: "straight", label: "直线", type: "straight", shortcut: "4" },
+  { id: "marker", label: "马克笔", type: "marker", shortcut: "3" },
+  { id: "wavy", label: "波浪线", type: "wavy", shortcut: "4" },
+  { id: "straight", label: "直线", type: "straight", shortcut: "5" },
 ];
 
 const pickerVisible = computed(
@@ -299,6 +299,7 @@ function isPickerSwatchSelected(index: number): boolean {
         aria-label="复制"
         @pointerdown.prevent="emit('action', 'copy')"
       >
+        <span class="selActionShortcut" aria-hidden="true">1</span>
         <span class="selActionIcon" aria-hidden="true" v-html="icons.copy"></span>
         <span class="selActionLabel">复制</span>
       </button>
@@ -311,7 +312,7 @@ function isPickerSwatchSelected(index: number): boolean {
         aria-label="高亮词"
         @pointerdown.prevent="emit('action', 'highlight')"
       >
-        <span class="selActionShortcut" aria-hidden="true">1</span>
+        <span class="selActionShortcut" aria-hidden="true">2</span>
         <span
           class="selActionIcon"
           aria-hidden="true"
@@ -411,7 +412,7 @@ function isPickerSwatchSelected(index: number): boolean {
           aria-label="记笔记"
           @pointerdown.prevent="emit('action', 'note')"
         >
-          <span class="selActionShortcut" aria-hidden="true">5</span>
+          <span class="selActionShortcut" aria-hidden="true">6</span>
           <span
             class="selActionIcon"
             :style="noteIconAccentStyle()"
@@ -428,6 +429,7 @@ function isPickerSwatchSelected(index: number): boolean {
         aria-label="查找"
         @pointerdown.prevent="emit('action', 'find')"
       >
+        <span class="selActionShortcut" aria-hidden="true">7</span>
         <span
           class="selActionIcon"
           aria-hidden="true"
@@ -442,6 +444,7 @@ function isPickerSwatchSelected(index: number): boolean {
         aria-label="词典"
         @pointerdown.prevent="emit('action', 'dictionary')"
       >
+        <span class="selActionShortcut" aria-hidden="true">8</span>
         <span
           class="selActionIcon"
           aria-hidden="true"
@@ -456,6 +459,7 @@ function isPickerSwatchSelected(index: number): boolean {
         aria-label="翻译"
         @pointerdown.prevent="emit('action', 'translate')"
       >
+        <span class="selActionShortcut" aria-hidden="true">9</span>
         <span
           class="selActionIcon"
           aria-hidden="true"
@@ -470,6 +474,7 @@ function isPickerSwatchSelected(index: number): boolean {
         aria-label="问 AI"
         @pointerdown.prevent="emit('action', 'askAi')"
       >
+        <span class="selActionShortcut" aria-hidden="true">0</span>
         <span class="selActionIcon" aria-hidden="true" v-html="icons.aiChat"></span>
         <span class="selActionLabel">问 AI</span>
       </button>

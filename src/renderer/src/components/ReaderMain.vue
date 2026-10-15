@@ -5101,8 +5101,7 @@ watch(readerClickTurnPageActive, (active) => {
 });
 
 watch(
-  () =>
-    !props.readerEditMode && props.showSelectionAnnotationTools !== false,
+  () => !props.readerEditMode,
   (enabled) => {
     removeSelectionToolbarDigitKeyCapture?.();
     removeSelectionToolbarDigitKeyCapture = null;
