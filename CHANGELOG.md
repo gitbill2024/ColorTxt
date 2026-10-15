@@ -7,6 +7,7 @@
 
 修复：
 
+- **Edge TTS** 朗读报错 `Unexpected server response: 403`：微软已要求 **Sec-MS-GEC v2** 握手令牌，旧版 v1 被拒绝
 - (Mac) 退出全屏模式阅读进度异常 [#99](https://github.com/ssnangua/ColorTxt/issues/99)
 - (Mac) 摸鱼模式：
   - 鼠标移到摸鱼窗口边缘时，会显示为调整窗口大小的光标
