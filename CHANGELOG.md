@@ -2,7 +2,7 @@
 
 改进：
 
-- 只读选区工具条支持数字快捷键：按钮左上角显示对应数字角标；标注类同键切换/取消；按钮未启用时快捷键不生效 [#110](https://github.com/ssnangua/ColorTxt/issues/110)
+- 只读选区工具条支持数字快捷键：按钮左上角显示对应数字角标；按钮未启用时快捷键不生效 [#110](https://github.com/ssnangua/ColorTxt/issues/110)
 - 「设置 → AI 阅读助手 → 对话模型」支持手动输入模型 ID（部分服务商没有提供模型查询接口） [#100](https://github.com/ssnangua/ColorTxt/issues/100)，[#101](https://github.com/ssnangua/ColorTxt/pull/101)
 - 系统字体列表：可切换「字体族 / 区分字重」 [#93](https://github.com/ssnangua/ColorTxt/issues/93)
 
