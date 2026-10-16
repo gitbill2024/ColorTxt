@@ -29,7 +29,7 @@
 
 ## 下载
 
-按操作系统选择安装包 `v3.8.12`（也可前往 [Releases](https://github.com/ssnangua/ColorTxt/releases/latest) 查看全部版本与更新说明）：
+按操作系统选择安装包 `v3.8.12`（也可前往 [Releases](https://github.com/ssnangua/ColorTxt/releases) 查看全部版本与更新说明）：
 
 | 系统 | 下载 |
 | --- | --- |
