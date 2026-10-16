@@ -22,9 +22,9 @@
 </p>
 
 
-<p align="center" style="font-size: 24px">
+<h3 align="center">
   <a href="#下载">下载</a> | <a href="#功能特性">功能特性</a> | <a href="./IMAGES.md">预览图</a> | <a href="#常见问题">常见问题</a>
-</p>
+</h3>
 
 
 ## 下载
