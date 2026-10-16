@@ -22,7 +22,7 @@
 </p>
 
 
-<img src="./src/renderer/src/assets/download.svg" width="18" height="18" alt=""> [下载](#下载) | <img src="./src/renderer/src/assets/explore.svg" width="18" height="18" alt=""> [功能特性](#功能特性) | <img src="./src/renderer/src/assets/image.svg" width="18" height="18" alt=""> [预览图](./IMAGES.md) | <img src="./src/renderer/src/assets/unknow.svg" width="18" height="18" alt=""> [常见问题](#常见问题)
+[下载](#下载) | [功能特性](#功能特性) | [预览图](./IMAGES.md) | [常见问题](#常见问题)
 
 
 ## 下载
