@@ -262,7 +262,7 @@ cardShellWrap（悬停抬高 z-index）
 | 意图 | **`@shared/aiWordcloudIntent`**：检测词云意图、`general`/`semantic` 模式、从用户原话提炼 **`semanticQuery`**；与思维导图同轮互斥见 **`aiVisualToolIntent`** |
 | 持久化 | 工具结果 JSON 写入 SQLite **`messages`**（`role=tool`，`tool_name=wordcloud`）；重开会话由 **`aiAssistantDbMessages`** 还原 |
 
-主进程实现：**`tools/wordcloudTool.ts`**、**`tools/wordcloudChapterFetch.ts`**、**`aiJieba.ts`**、**`aiSegmentCache.ts`**；语义 prompt：**`@shared/aiWordcloudSemanticFocus`**（含高亮词检索用的 **`collectMax`**）；停用词：**`@shared/aiWordcloudStopwords`**。打包时 **`@node-rs/jieba`** 原生扩展经 **`asarUnpack`** 解出，**`prune-pack-deps`** 仅保留目标平台 **`jieba-*`** 包（交叉编译时用 **`npm pack`** 补装，例如 darwin-x64）。
+主进程实现：**`tools/wordcloudTool.ts`**（语义模式分批抽取/筛选；**Abort** 时可带回已完成批次的词项）、**`tools/wordcloudChapterFetch.ts`**、**`aiJieba.ts`**、**`aiSegmentCache.ts`**；语义 prompt：**`@shared/aiWordcloudSemanticFocus`**（含高亮词检索用的 **`collectMax`**）；停用词：**`@shared/aiWordcloudStopwords`**。打包时 **`@node-rs/jieba`** 原生扩展经 **`asarUnpack`** 解出，**`prune-pack-deps`** 仅保留目标平台 **`jieba-*`** 包（交叉编译时用 **`npm pack`** 补装，例如 darwin-x64）。
 
 ### 高亮词 AI 检索（需启用 AI 阅读助手）
 
@@ -273,9 +273,10 @@ cardShellWrap（悬停抬高 z-index）
 | 菜单 | **AI 检索：人名** / **地名** / 分隔线 / **自定义语义**（`appPrompt` 输入自由文本） |
 | 管线 | 主进程 **`ai:wordcloud:run`** → 直接调 **`runWordcloudTool`**（`mode=semantic`，`unlimitedTerms: true`） |
 | 结果 | 按出现次数降序的词语列表；完成后预填打开 **`HighlightTermEditModal`**（添加模式） |
-| Loading | 全局蒙层 **「AI 检索中」**（`appLoading`）；检索中 **Esc** → **`ai:wordcloud:abort`** 中止（不弹错误） |
+| 进度 | 不挡操作：在 **`HighlightListPanel`** 列表顶部插入信息条（样式对齐 **`AiIndexProgressBanner`**），文案如 **「正在检索「人名」」** + **`LoadingDotsBounce`**；右侧 **×**（`title`/`aria-label`「停止」）→ **`ai:wordcloud:abort`** |
+| 停止 | 分批抽取/筛选中途停止时，主进程若已有词项则返回**部分结果**（本地再计词频排序）并同样打开添加面板；尚无词项则安静结束（不弹错误） |
 | 收集规模 | 相对词云展示放宽：更大章节抽样、分批抽取、候选上限约 **2000**、`maxTokens` 抬高；提示词要求尽可能多列（见 **`aiWordcloudSemanticFocus`** 的 `collectMax`）；仍受抽样覆盖与模型输出约束 |
-| 渲染侧 | **`useHighlightAiSearch.ts`**（`ReaderSidebar` 接线）；bookHash 与助手同源（会话路径 + 正文 size/mtime） |
+| 渲染侧 | **`useHighlightAiSearch.ts`**（`ReaderSidebar` 接线，暴露 `searching` / `searchBannerText` / `stopSearch`）；bookHash 与助手同源（会话路径 + 正文 size/mtime） |
 
 词云对话工具默认仍受设置 **`wordcloudMaxWords`（≤200）** 与「50～120」抽取提示约束；仅高亮词 IPC 走 `unlimitedTerms` / `collectMax` 路径。
 
