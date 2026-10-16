@@ -55,7 +55,7 @@ function createFindBookSettingsStore() {
   const monacoAdvancedWrapping = ref(initial.monacoAdvancedWrapping);
   const monacoCjkWrapOptimize = ref(initial.monacoCjkWrapOptimize);
   const monacoSmoothScrolling = ref(initial.monacoSmoothScrolling);
-  const disableScrollbarTrackJump = ref(initial.disableScrollbarTrackJump);
+  const scrollbarTrackBehavior = ref(initial.scrollbarTrackBehavior);
   const mouseWheelScrollSensitivity = ref(initial.mouseWheelScrollSensitivity);
   const fastScrollSensitivity = ref(initial.fastScrollSensitivity);
   const stickyChapterTitleEnabled = ref(initial.stickyChapterTitleEnabled);
@@ -125,7 +125,7 @@ function createFindBookSettingsStore() {
       monacoAdvancedWrapping: monacoAdvancedWrapping.value,
       monacoCjkWrapOptimize: monacoCjkWrapOptimize.value,
       monacoSmoothScrolling: monacoSmoothScrolling.value,
-      disableScrollbarTrackJump: disableScrollbarTrackJump.value,
+      scrollbarTrackBehavior: scrollbarTrackBehavior.value,
       mouseWheelScrollSensitivity: mouseWheelScrollSensitivity.value,
       fastScrollSensitivity: fastScrollSensitivity.value,
       stickyChapterTitleEnabled: stickyChapterTitleEnabled.value,
@@ -215,7 +215,7 @@ function createFindBookSettingsStore() {
     monacoAdvancedWrapping.value = shared.monacoAdvancedWrapping;
     monacoCjkWrapOptimize.value = shared.monacoCjkWrapOptimize;
     monacoSmoothScrolling.value = shared.monacoSmoothScrolling;
-    disableScrollbarTrackJump.value = shared.disableScrollbarTrackJump;
+    scrollbarTrackBehavior.value = shared.scrollbarTrackBehavior;
     mouseWheelScrollSensitivity.value = shared.mouseWheelScrollSensitivity;
     fastScrollSensitivity.value = shared.fastScrollSensitivity;
     stickyChapterTitleEnabled.value = shared.stickyChapterTitleEnabled;
@@ -307,7 +307,7 @@ function createFindBookSettingsStore() {
     monacoAdvancedWrapping,
     monacoCjkWrapOptimize,
     monacoSmoothScrolling,
-    disableScrollbarTrackJump,
+    scrollbarTrackBehavior,
     mouseWheelScrollSensitivity,
     fastScrollSensitivity,
     stickyChapterTitleEnabled,

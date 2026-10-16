@@ -13,7 +13,7 @@ import {
   defaultMonacoCjkWrapOptimize,
   defaultMonacoCustomHighlight,
   defaultMonacoSmoothScrolling,
-  defaultDisableScrollbarTrackJump,
+  parseScrollbarTrackBehavior,
   defaultMouseWheelScrollSensitivity,
   defaultFastScrollSensitivity,
   clampMouseWheelScrollSensitivity,
@@ -214,7 +214,7 @@ export type SharedReaderSettingsSnapshot = {
   monacoAdvancedWrapping: boolean;
   monacoCjkWrapOptimize: boolean;
   monacoSmoothScrolling: boolean;
-  disableScrollbarTrackJump: boolean;
+  scrollbarTrackBehavior: import("../../constants/appUi").ScrollbarTrackBehavior;
   mouseWheelScrollSensitivity: number;
   fastScrollSensitivity: number;
   stickyChapterTitleEnabled: boolean;
@@ -310,10 +310,10 @@ export function sharedReaderSettingsFromMainData(
       typeof data.monacoSmoothScrolling === "boolean"
         ? data.monacoSmoothScrolling
         : defaultMonacoSmoothScrolling,
-    disableScrollbarTrackJump:
-      typeof data.disableScrollbarTrackJump === "boolean"
-        ? data.disableScrollbarTrackJump
-        : defaultDisableScrollbarTrackJump,
+    scrollbarTrackBehavior: parseScrollbarTrackBehavior(
+      data.scrollbarTrackBehavior,
+      data.disableScrollbarTrackJump,
+    ),
     mouseWheelScrollSensitivity: clampMouseWheelScrollSensitivity(
       typeof data.mouseWheelScrollSensitivity === "number"
         ? data.mouseWheelScrollSensitivity
@@ -419,7 +419,7 @@ export function snapshotSharedReaderSettingsForMain(
     monacoAdvancedWrapping: state.monacoAdvancedWrapping,
     monacoCjkWrapOptimize: state.monacoCjkWrapOptimize,
     monacoSmoothScrolling: state.monacoSmoothScrolling,
-    disableScrollbarTrackJump: state.disableScrollbarTrackJump,
+    scrollbarTrackBehavior: state.scrollbarTrackBehavior,
     mouseWheelScrollSensitivity: state.mouseWheelScrollSensitivity,
     fastScrollSensitivity: state.fastScrollSensitivity,
     stickyChapterTitleEnabled: state.stickyChapterTitleEnabled,

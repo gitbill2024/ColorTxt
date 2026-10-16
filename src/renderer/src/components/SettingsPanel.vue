@@ -50,7 +50,7 @@ import {
   defaultFullscreenShowSystemTime,
   defaultMonacoCjkWrapOptimize,
   defaultMonacoSmoothScrolling,
-  defaultDisableScrollbarTrackJump,
+  defaultScrollbarTrackBehavior,
   defaultMouseWheelScrollSensitivity,
   defaultFastScrollSensitivity,
   clampMouseWheelScrollSensitivity,
@@ -159,7 +159,7 @@ export type SettingsApplyPayload = {
   fullscreenReaderWidthPercent: number;
   fullscreenShowSystemTime: boolean;
   monacoSmoothScrolling: boolean;
-  disableScrollbarTrackJump: boolean;
+  scrollbarTrackBehavior: import("../constants/appUi").ScrollbarTrackBehavior;
   monacoCjkWrapOptimize: boolean;
   mouseWheelScrollSensitivity: number;
   fastScrollSensitivity: number;
@@ -221,7 +221,7 @@ const props = defineProps<{
   readerLetterSpacingPx: number;
   readerHorizontalInsetPx: number;
   monacoSmoothScrolling: boolean;
-  disableScrollbarTrackJump: boolean;
+  scrollbarTrackBehavior: import("../constants/appUi").ScrollbarTrackBehavior;
   monacoCjkWrapOptimize: boolean;
   mouseWheelScrollSensitivity: number;
   fastScrollSensitivity: number;
@@ -303,7 +303,7 @@ const draftLineSpacingPx = ref(defaultLineSpacingPx);
 const draftLetterSpacingPx = ref(defaultLetterSpacingPx);
 const draftReaderHorizontalInsetPx = ref(defaultReaderHorizontalInsetPx);
 const draftMonacoSmoothScrolling = ref(true);
-const draftDisableScrollbarTrackJump = ref(defaultDisableScrollbarTrackJump);
+const draftScrollbarTrackBehavior = ref(defaultScrollbarTrackBehavior);
 const draftMonacoCjkWrapOptimize = ref(defaultMonacoCjkWrapOptimize);
 const draftMouseWheelScrollSensitivity = ref(
   defaultMouseWheelScrollSensitivity,
@@ -401,7 +401,7 @@ function syncDraftFromProps() {
     props.readerHorizontalInsetPx,
   );
   draftMonacoSmoothScrolling.value = props.monacoSmoothScrolling;
-  draftDisableScrollbarTrackJump.value = props.disableScrollbarTrackJump;
+  draftScrollbarTrackBehavior.value = props.scrollbarTrackBehavior;
   draftMonacoCjkWrapOptimize.value = props.monacoCjkWrapOptimize;
   draftMouseWheelScrollSensitivity.value = clampMouseWheelScrollSensitivity(
     props.mouseWheelScrollSensitivity,
@@ -623,7 +623,7 @@ function resetReadingDraft() {
   draftLetterSpacingPx.value = defaultLetterSpacingPx;
   draftReaderHorizontalInsetPx.value = defaultReaderHorizontalInsetPx;
   draftMonacoSmoothScrolling.value = defaultMonacoSmoothScrolling;
-  draftDisableScrollbarTrackJump.value = defaultDisableScrollbarTrackJump;
+  draftScrollbarTrackBehavior.value = defaultScrollbarTrackBehavior;
   draftMonacoCjkWrapOptimize.value = defaultMonacoCjkWrapOptimize;
   draftMouseWheelScrollSensitivity.value = defaultMouseWheelScrollSensitivity;
   draftFastScrollSensitivity.value = defaultFastScrollSensitivity;
@@ -862,7 +862,7 @@ async function onConfirm() {
     fullscreenReaderWidthPercent: draftFullscreenReaderWidthPercent.value,
     fullscreenShowSystemTime: draftFullscreenShowSystemTime.value,
     monacoSmoothScrolling: draftMonacoSmoothScrolling.value,
-    disableScrollbarTrackJump: draftDisableScrollbarTrackJump.value,
+    scrollbarTrackBehavior: draftScrollbarTrackBehavior.value,
     monacoCjkWrapOptimize: draftMonacoCjkWrapOptimize.value,
     mouseWheelScrollSensitivity: clampMouseWheelScrollSensitivity(
       draftMouseWheelScrollSensitivity.value,
@@ -1066,9 +1066,7 @@ async function onClearCache() {
                 draftReaderHorizontalInsetPx
               "
               v-model:draft-monaco-smooth-scrolling="draftMonacoSmoothScrolling"
-              v-model:draft-disable-scrollbar-track-jump="
-                draftDisableScrollbarTrackJump
-              "
+              v-model:draft-scrollbar-track-behavior="draftScrollbarTrackBehavior"
               v-model:draft-monaco-cjk-wrap-optimize="draftMonacoCjkWrapOptimize"
               v-model:draft-mouse-wheel-scroll-sensitivity="
                 draftMouseWheelScrollSensitivity

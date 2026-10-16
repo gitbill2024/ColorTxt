@@ -36,7 +36,7 @@ import {
   defaultFullscreenShowSystemTime,
   defaultMonacoCjkWrapOptimize,
   defaultMonacoSmoothScrolling,
-  defaultDisableScrollbarTrackJump,
+  defaultScrollbarTrackBehavior,
   defaultMouseWheelScrollSensitivity,
   defaultFastScrollSensitivity,
   clampMouseWheelScrollSensitivity,
@@ -174,7 +174,7 @@ const draftLineSpacingPx = ref(defaultLineSpacingPx);
 const draftLetterSpacingPx = ref(defaultLetterSpacingPx);
 const draftReaderHorizontalInsetPx = ref(defaultReaderHorizontalInsetPx);
 const draftMonacoSmoothScrolling = ref(defaultMonacoSmoothScrolling);
-const draftDisableScrollbarTrackJump = ref(defaultDisableScrollbarTrackJump);
+const draftScrollbarTrackBehavior = ref(defaultScrollbarTrackBehavior);
 const draftMonacoCjkWrapOptimize = ref(defaultMonacoCjkWrapOptimize);
 const draftMouseWheelScrollSensitivity = ref(
   defaultMouseWheelScrollSensitivity,
@@ -306,7 +306,7 @@ function syncSharedReaderDraftFromStore() {
     fb.readerHorizontalInsetPx.value,
   );
   draftMonacoSmoothScrolling.value = fb.monacoSmoothScrolling.value;
-  draftDisableScrollbarTrackJump.value = fb.disableScrollbarTrackJump.value;
+  draftScrollbarTrackBehavior.value = fb.scrollbarTrackBehavior.value;
   draftMonacoCjkWrapOptimize.value = fb.monacoCjkWrapOptimize.value;
   draftMouseWheelScrollSensitivity.value = clampMouseWheelScrollSensitivity(
     fb.mouseWheelScrollSensitivity.value,
@@ -412,7 +412,7 @@ function resetReadingDraft() {
   draftLetterSpacingPx.value = defaultLetterSpacingPx;
   draftReaderHorizontalInsetPx.value = defaultReaderHorizontalInsetPx;
   draftMonacoSmoothScrolling.value = defaultMonacoSmoothScrolling;
-  draftDisableScrollbarTrackJump.value = defaultDisableScrollbarTrackJump;
+  draftScrollbarTrackBehavior.value = defaultScrollbarTrackBehavior;
   draftMonacoCjkWrapOptimize.value = defaultMonacoCjkWrapOptimize;
   draftMouseWheelScrollSensitivity.value = defaultMouseWheelScrollSensitivity;
   draftFastScrollSensitivity.value = defaultFastScrollSensitivity;
@@ -589,7 +589,7 @@ async function onConfirm() {
     draftReaderHorizontalInsetPx.value,
   );
   fb.monacoSmoothScrolling.value = draftMonacoSmoothScrolling.value;
-  fb.disableScrollbarTrackJump.value = draftDisableScrollbarTrackJump.value;
+  fb.scrollbarTrackBehavior.value = draftScrollbarTrackBehavior.value;
   fb.monacoCjkWrapOptimize.value = draftMonacoCjkWrapOptimize.value;
   fb.mouseWheelScrollSensitivity.value = clampMouseWheelScrollSensitivity(
     draftMouseWheelScrollSensitivity.value,
@@ -753,9 +753,7 @@ watch(draftFontSize, (size) => {
                 draftReaderHorizontalInsetPx
               "
               v-model:draft-monaco-smooth-scrolling="draftMonacoSmoothScrolling"
-              v-model:draft-disable-scrollbar-track-jump="
-                draftDisableScrollbarTrackJump
-              "
+              v-model:draft-scrollbar-track-behavior="draftScrollbarTrackBehavior"
               v-model:draft-monaco-cjk-wrap-optimize="draftMonacoCjkWrapOptimize"
               v-model:draft-mouse-wheel-scroll-sensitivity="
                 draftMouseWheelScrollSensitivity
