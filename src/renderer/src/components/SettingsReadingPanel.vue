@@ -522,8 +522,7 @@ const selectListsEmpty: CustomSelectItem[] = [];
           />
         </div>
         <p class="settingsHint">
-          只读时点击轨道：禁用=不滚动；翻页=与上一屏/下一屏相同；跳转=跳到点击位置。编辑
-          / Diff 预览始终为跳转。
+          只读时点击轨道：禁用=不滚动；翻页=上一屏/下一屏；跳转=跳到点击位置。
         </p>
       </div>
 
