@@ -7,7 +7,7 @@
 - 「设置 → 阅读 → 滚动」新增「滚动条轨道行为」：**禁用** / **翻页**（默认）/ **跳转**；只读时生效，编辑与 Diff 预览始终为跳转 [#114](https://github.com/ssnangua/ColorTxt/issues/114)
 - 移除高亮词前增加二次确认 [#102](https://github.com/ssnangua/ColorTxt/issues/102)
 - 高亮词「AI 检索」进行中改为在列表内显示信息条，不再全屏蒙版挡操作；信息条右侧可点「停止」，并使用已检索到的词语 [#102](https://github.com/ssnangua/ColorTxt/issues/102)
-- 系统字体列表：可切换「字体族 / 区分字重」 [#93](https://github.com/ssnangua/ColorTxt/issues/93)
+- 系统字体列表：可切换「字体族 / 区分字重」；列表预览同时应用字重与斜体 [#93](https://github.com/ssnangua/ColorTxt/issues/93)
 
 修复：
 
