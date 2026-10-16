@@ -22,19 +22,20 @@
 </p>
 
 
+### [下载](#下载) | [功能特性](#功能特性) | [预览图](./IMAGES.md) | [常见问题](#常见问题)
+
+
 ## 下载
 
-按操作系统选择安装包（也可前往 [Releases](https://github.com/ssnangua/ColorTxt/releases/latest) 查看全部版本与更新说明）：
+按操作系统选择安装包 `v3.8.11`（也可前往 [Releases](https://github.com/ssnangua/ColorTxt/releases/latest) 查看全部版本与更新说明）：
 
 | 系统 | 下载 |
 | --- | --- |
-| Windows | [![Setup x64](https://img.shields.io/badge/Setup-x64-blue?logo=windows&logoColor=white)](https://github.com/ssnangua/ColorTxt/releases/download/v3.8.11/colortxt-3.8.11-Setup.exe) [![Portable x64](https://img.shields.io/badge/Portable-x64-blue?logo=windows&logoColor=white)](https://github.com/ssnangua/ColorTxt/releases/download/v3.8.11/colortxt-3.8.11-Portable.exe) |
+| Windows | [![安装包 x64](https://img.shields.io/badge/安装包-x64-blue?logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTAgMy40NDkgOS43NSAyLjF2OS40NTFIMG0xMC45NDktOS42MDJMMjQgMHYxMS40SDEwLjk0OU0wIDEyLjZoOS43NXY5LjQ1MUwwIDIwLjY5OU0xMC45NDkgMTIuNkgyNFYyNGwtMTIuOS0xLjgwMSIvPjwvc3ZnPg%3D%3D)](https://github.com/ssnangua/ColorTxt/releases/download/v3.8.11/colortxt-3.8.11-Setup.exe) [![便携版 x64](https://img.shields.io/badge/便携版-x64-blue?logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTAgMy40NDkgOS43NSAyLjF2OS40NTFIMG0xMC45NDktOS42MDJMMjQgMHYxMS40SDEwLjk0OU0wIDEyLjZoOS43NXY5LjQ1MUwwIDIwLjY5OU0xMC45NDkgMTIuNkgyNFYyNGwtMTIuOS0xLjgwMSIvPjwvc3ZnPg%3D%3D)](https://github.com/ssnangua/ColorTxt/releases/download/v3.8.11/colortxt-3.8.11-Portable.exe) |
 | macOS | [![DMG Apple Silicon](https://img.shields.io/badge/DMG-Apple%20Silicon-black?logo=apple&logoColor=white)](https://github.com/ssnangua/ColorTxt/releases/download/v3.8.11/colortxt-3.8.11-arm64.dmg) [![DMG Intel X64](https://img.shields.io/badge/DMG-Intel%20X64-black?logo=apple&logoColor=white)](https://github.com/ssnangua/ColorTxt/releases/download/v3.8.11/colortxt-3.8.11-x64.dmg) |
 | Linux | [![AppImage x64](https://img.shields.io/badge/AppImage-x64-FCBF25?logo=linux&logoColor=white)](https://github.com/ssnangua/ColorTxt/releases/download/v3.8.11/colortxt-3.8.11-x86_64.AppImage) [![AppImage arm64](https://img.shields.io/badge/AppImage-arm64-FCBF25?logo=linux&logoColor=white)](https://github.com/ssnangua/ColorTxt/releases/download/v3.8.11/colortxt-3.8.11-arm64.AppImage) |
 
-> 链接指向当前最新 Release（`v3.8.11`）。发新版后请同步改表中版本号与文件名；Linux 目前仅提供 AppImage。
-
-## 功能特性 <span style="font-size: 18px; font-weight: normal">[[预览图](./IMAGES.md)]</span>
+## 功能特性
 
 |  | 功能 | 说明 |
 | :---: | --- | --- |
