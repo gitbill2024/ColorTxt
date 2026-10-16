@@ -136,6 +136,8 @@ export type PersistedSettingsData = {
   monacoCjkWrapOptimize?: boolean;
   /** Monaco 阅读区平滑滚动（滚轮、程序性 setScrollTop/revealLine 等） */
   monacoSmoothScrolling?: boolean;
+  /** 禁用点击滚动条轨道跳转（仍可拖动滑块） */
+  disableScrollbarTrackJump?: boolean;
   /** Monaco 滚轮滚动倍率（`mouseWheelScrollSensitivity`） */
   mouseWheelScrollSensitivity?: number;
   /** Monaco 按住 Alt 时的滚轮加速倍率（`fastScrollSensitivity`） */
@@ -464,6 +466,9 @@ export function loadPersistedSettingsData(
   }
   if (typeof obj.monacoSmoothScrolling === "boolean") {
     data.monacoSmoothScrolling = obj.monacoSmoothScrolling;
+  }
+  if (typeof obj.disableScrollbarTrackJump === "boolean") {
+    data.disableScrollbarTrackJump = obj.disableScrollbarTrackJump;
   }
   if (
     typeof obj.mouseWheelScrollSensitivity === "number" &&

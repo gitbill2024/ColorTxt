@@ -76,6 +76,7 @@ const props = withDefaults(
     draftLetterSpacingPx: number;
     draftReaderHorizontalInsetPx: number;
     draftMonacoSmoothScrolling: boolean;
+    draftDisableScrollbarTrackJump: boolean;
     draftMonacoCjkWrapOptimize: boolean;
     draftMouseWheelScrollSensitivity: number;
     draftFastScrollSensitivity: number;
@@ -132,6 +133,7 @@ defineEmits<{
   "update:draftLetterSpacingPx": [v: number];
   "update:draftReaderHorizontalInsetPx": [v: number];
   "update:draftMonacoSmoothScrolling": [v: boolean];
+  "update:draftDisableScrollbarTrackJump": [v: boolean];
   "update:draftMonacoCjkWrapOptimize": [v: boolean];
   "update:draftMouseWheelScrollSensitivity": [v: number];
   "update:draftFastScrollSensitivity": [v: number];
@@ -500,6 +502,20 @@ const selectListsEmpty: CustomSelectItem[] = [];
           />
         </div>
         <p class="settingsHint">关闭后，阅读区滚动不再使用平滑动画。</p>
+      </div>
+
+      <div class="settingsRow">
+        <div class="settingsRowMain">
+          <span class="settingsLabel">禁用滚动条轨道</span>
+          <SwitchToggle
+            :model-value="draftDisableScrollbarTrackJump"
+            aria-label="禁用滚动条轨道"
+            @update:model-value="
+              $emit('update:draftDisableScrollbarTrackJump', $event)
+            "
+          />
+        </div>
+        <p class="settingsHint">点击滚动条轨道不跳转（仍可拖动滑块）。</p>
       </div>
 
       <div class="settingsRow">

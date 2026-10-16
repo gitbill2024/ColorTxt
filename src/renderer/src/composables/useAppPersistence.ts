@@ -277,6 +277,7 @@ export function useAppPersistence(deps: {
   monacoAdvancedWrapping: Ref<boolean>;
   monacoCjkWrapOptimize: Ref<boolean>;
   monacoSmoothScrolling: Ref<boolean>;
+  disableScrollbarTrackJump: Ref<boolean>;
   mouseWheelScrollSensitivity: Ref<number>;
   fastScrollSensitivity: Ref<number>;
   stickyChapterTitleEnabled: Ref<boolean>;
@@ -430,6 +431,7 @@ export function useAppPersistence(deps: {
       monacoAdvancedWrapping: deps.monacoAdvancedWrapping.value,
       monacoCjkWrapOptimize: deps.monacoCjkWrapOptimize.value,
       monacoSmoothScrolling: deps.monacoSmoothScrolling.value,
+      disableScrollbarTrackJump: deps.disableScrollbarTrackJump.value,
       mouseWheelScrollSensitivity: deps.mouseWheelScrollSensitivity.value,
       fastScrollSensitivity: deps.fastScrollSensitivity.value,
       stickyChapterTitleEnabled: deps.stickyChapterTitleEnabled.value,
@@ -1345,6 +1347,9 @@ export function useAppPersistence(deps: {
       }
       if (typeof data.monacoSmoothScrolling === "boolean") {
         deps.monacoSmoothScrolling.value = data.monacoSmoothScrolling;
+      }
+      if (typeof data.disableScrollbarTrackJump === "boolean") {
+        deps.disableScrollbarTrackJump.value = data.disableScrollbarTrackJump;
       }
       if (
         typeof data.mouseWheelScrollSensitivity === "number" &&

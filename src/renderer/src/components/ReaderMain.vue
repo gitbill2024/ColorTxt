@@ -18,6 +18,7 @@ import {
   refreshStickyChapterScrollWidget,
   registerChapterStickyScrollProviders,
 } from "../monaco/chapterStickyScroll";
+import { bindMonacoScrollbarTrackJumpGuard } from "../monaco/scrollbarTrackJumpGuard";
 import {
   buildChapterMinimapSectionHeaderDecorations,
   buildChapterTitleDecorations,
@@ -132,6 +133,7 @@ import {
   defaultMonacoCjkWrapOptimize,
   defaultMonacoCustomHighlight,
   defaultMonacoSmoothScrolling,
+  defaultDisableScrollbarTrackJump,
   defaultMouseWheelScrollSensitivity,
   defaultFastScrollSensitivity,
   defaultStickyChapterTitleEnabled,
@@ -501,6 +503,8 @@ const props = withDefaults(
     horizontalInsetPx?: number;
     /** Monaco 平滑滚动（滚轮、revealLine、setScrollTop 等） */
     monacoSmoothScrolling?: boolean;
+    /** 禁用点击滚动条轨道跳转（仍可拖动滑块）；仅只读，编辑 / Diff 预览不拦截 */
+    disableScrollbarTrackJump?: boolean;
     /** Monaco 滚轮滚动倍率 */
     mouseWheelScrollSensitivity?: number;
     /** Monaco 按住 Alt 时的滚轮加速倍率 */
@@ -623,6 +627,7 @@ const props = withDefaults(
     letterSpacingPx: defaultLetterSpacingPx,
     horizontalInsetPx: defaultReaderHorizontalInsetPx,
     monacoSmoothScrolling: defaultMonacoSmoothScrolling,
+    disableScrollbarTrackJump: defaultDisableScrollbarTrackJump,
     mouseWheelScrollSensitivity: defaultMouseWheelScrollSensitivity,
     fastScrollSensitivity: defaultFastScrollSensitivity,
     stickyChapterTitleEnabled: defaultStickyChapterTitleEnabled,
@@ -4829,6 +4834,15 @@ onMounted(() => {
      * 右键在捕获阶段截断，不交给 Monaco（否则会把光标移到点击处并清空选区）；菜单改由原生 contextmenu 打开。
      */
     const editorHost = editorEl.value;
+    /** 挂在 editorHost 捕获阶段，早于 Monaco 轨道节点上的 bubble 监听；仅只读 */
+    const disposeScrollbarTrackJumpGuard = bindMonacoScrollbarTrackJumpGuard(
+      e,
+      () =>
+        props.disableScrollbarTrackJump !== false &&
+        !props.readerEditMode &&
+        !smartFormatReviewActive.value,
+      editorHost,
+    );
     const onReaderPointerDownCapture = (ev: PointerEvent) => {
       if (ev.button === 2) {
         // 只截断冒泡到 Monaco，勿 preventDefault（否则可能不再触发 contextmenu）
@@ -4947,6 +4961,7 @@ onMounted(() => {
     editorHost?.addEventListener("click", onFindNavigateAnchorCapture, true);
     window.addEventListener("keydown", onFindNavigateKeyCapture, true);
     onBeforeUnmount(() => {
+      disposeScrollbarTrackJumpGuard();
       d1.dispose();
       dLayout.dispose();
       window.removeEventListener("resize", flushReaderBackgroundStickyAlign);

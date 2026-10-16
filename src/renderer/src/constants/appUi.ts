@@ -261,6 +261,11 @@ export const defaultMonacoAdvancedWrapping = false;
 export const defaultMonacoCjkWrapOptimize = true;
 /** Monaco 阅读区：滚轮/跳转等是否使用平滑滚动动画 */
 export const defaultMonacoSmoothScrolling = true;
+/**
+ * 禁用点击滚动条轨道跳转（仍可拖动滑块）；仅只读阅读生效，编辑 / Diff 预览不拦截。
+ * Monaco 无官方开关，由阅读器捕获 pointerdown 拦截。
+ */
+export const defaultDisableScrollbarTrackJump = true;
 /** Monaco `mouseWheelScrollSensitivity`：滚轮 delta 倍率 */
 export const defaultMouseWheelScrollSensitivity = 1;
 export const minMouseWheelScrollSensitivity = 0.1;

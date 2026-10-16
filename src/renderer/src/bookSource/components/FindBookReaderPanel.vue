@@ -233,6 +233,7 @@ const {
   monacoAdvancedWrapping,
   monacoCjkWrapOptimize,
   monacoSmoothScrolling,
+  disableScrollbarTrackJump,
   mouseWheelScrollSensitivity,
   fastScrollSensitivity,
   stickyChapterTitleEnabled,
@@ -2528,6 +2529,7 @@ const modalRef = ref<InstanceType<typeof AppModal> | null>(null);
             :letter-spacing-px="readerLetterSpacingPx"
             :horizontal-inset-px="readerHorizontalInsetPx"
             :monaco-smooth-scrolling="monacoSmoothScrolling"
+            :disable-scrollbar-track-jump="disableScrollbarTrackJump"
             :mouse-wheel-scroll-sensitivity="mouseWheelScrollSensitivity"
             :fast-scroll-sensitivity="fastScrollSensitivity"
             :sticky-chapter-title-enabled="stickyChapterTitleEnabled"

@@ -146,6 +146,7 @@ import {
   defaultMonacoCjkWrapOptimize,
   defaultMonacoCustomHighlight,
   defaultMonacoSmoothScrolling,
+  defaultDisableScrollbarTrackJump,
   defaultMouseWheelScrollSensitivity,
   defaultFastScrollSensitivity,
   clampMouseWheelScrollSensitivity,
@@ -682,6 +683,7 @@ const monacoAdvancedWrapping = ref(defaultMonacoAdvancedWrapping);
 const monacoCjkWrapOptimize = ref(defaultMonacoCjkWrapOptimize);
 /** Monaco 阅读区平滑滚动（设置可关） */
 const monacoSmoothScrolling = ref(defaultMonacoSmoothScrolling);
+const disableScrollbarTrackJump = ref(defaultDisableScrollbarTrackJump);
 const mouseWheelScrollSensitivity = ref(defaultMouseWheelScrollSensitivity);
 const fastScrollSensitivity = ref(defaultFastScrollSensitivity);
 /** 阅读区顶部粘性章节标题 */
@@ -1197,6 +1199,7 @@ const persistence = useAppPersistence({
   monacoAdvancedWrapping,
   monacoCjkWrapOptimize,
   monacoSmoothScrolling,
+  disableScrollbarTrackJump,
   mouseWheelScrollSensitivity,
   fastScrollSensitivity,
   stickyChapterTitleEnabled,
@@ -3464,6 +3467,7 @@ async function applySettings(payload: SettingsApplyPayload) {
   const prevChapterTitleBlankMode = chapterTitleBlankMode.value;
   const prevChapterMinCharCount = chapterMinCharCount.value;
   monacoSmoothScrolling.value = payload.monacoSmoothScrolling;
+  disableScrollbarTrackJump.value = payload.disableScrollbarTrackJump;
   monacoCjkWrapOptimize.value = payload.monacoCjkWrapOptimize;
   mouseWheelScrollSensitivity.value = clampMouseWheelScrollSensitivity(
     payload.mouseWheelScrollSensitivity,
@@ -4130,6 +4134,7 @@ useAppShellThemeWatch({
           :letter-spacing-px="readerLetterSpacingPx"
           :horizontal-inset-px="readerHorizontalInsetPx"
           :monaco-smooth-scrolling="monacoSmoothScrolling"
+          :disable-scrollbar-track-jump="disableScrollbarTrackJump"
           :mouse-wheel-scroll-sensitivity="mouseWheelScrollSensitivity"
           :fast-scroll-sensitivity="fastScrollSensitivity"
           :sticky-chapter-title-enabled="stickyChapterTitleEnabled"
@@ -4412,6 +4417,7 @@ useAppShellThemeWatch({
       :chapter-title-blank-mode="chapterTitleBlankMode"
       :compress-blank-keep-one-blank="compressBlankKeepOneBlank"
       :monaco-smooth-scrolling="monacoSmoothScrolling"
+      :disable-scrollbar-track-jump="disableScrollbarTrackJump"
       :monaco-cjk-wrap-optimize="monacoCjkWrapOptimize"
       :mouse-wheel-scroll-sensitivity="mouseWheelScrollSensitivity"
       :fast-scroll-sensitivity="fastScrollSensitivity"
