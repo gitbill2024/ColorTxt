@@ -229,16 +229,20 @@ export function useBookSourceApi() {
 
 /** 可参与搜索的文本书源数量（可选限定 sourceUrls） */
 export async function countEligibleSearchSources(
-  options?: { sourceUrls?: string[] },
+  options?: { sourceUrls?: string[]; excludeSourceUrls?: string[] },
 ): Promise<number> {
   const all = await window.colorTxt.bookSourceList();
   const scope = options?.sourceUrls?.length
     ? new Set(options.sourceUrls)
     : null;
+  const exclude = new Set(
+    (options?.excludeSourceUrls ?? []).filter((u) => typeof u === "string"),
+  );
   return all.filter((s) => {
     if (!s.hasSearchUrl) return false;
     const t = s.bookSourceType;
     if (t !== 0 && t !== undefined && t !== null) return false;
+    if (exclude.has(s.bookSourceUrl)) return false;
     if (scope) return scope.has(s.bookSourceUrl);
     // 未限定时仅统计启用源；特指 sourceUrls 时不要求 enabled
     return s.enabled;
@@ -286,7 +290,11 @@ export function useBookSourceSearch() {
 
   async function search(
     key: string,
-    options?: { sourceUrls?: string[]; precisionSearch?: boolean },
+    options?: {
+      sourceUrls?: string[];
+      precisionSearch?: boolean;
+      excludeSourceUrls?: string[];
+    },
   ) {
     const k = key.trim();
     if (!k) return;
@@ -316,12 +324,17 @@ export function useBookSourceSearch() {
     searchPhase.value = "searching";
 
     const searchOptions =
-      options?.sourceUrls?.length || options?.precisionSearch
+      options?.sourceUrls?.length ||
+      options?.precisionSearch ||
+      options?.excludeSourceUrls?.length
         ? {
             ...(options.sourceUrls?.length
               ? { sourceUrls: options.sourceUrls }
               : {}),
             ...(options.precisionSearch ? { precisionSearch: true } : {}),
+            ...(options.excludeSourceUrls?.length
+              ? { excludeSourceUrls: options.excludeSourceUrls }
+              : {}),
           }
         : undefined;
 

@@ -77,15 +77,23 @@ const DEFAULT_PRECISION_SEARCH = false;
 type SearchOptions = {
   sourceUrls?: string[];
   precisionSearch?: boolean;
+  excludeSourceUrls?: string[];
 };
 
 /**
  * 解析本次搜索参与的书源：
  * - 未限定：仅启用且配置了 searchUrl 的文本源
  * - 限定 sourceUrls：按 URL 取源，**不要求 enabled**（特指搜索某源时应可用）
+ * - excludeSourceUrls：无论是否限定，都从结果中剔除这些源（如番茄开关关闭时）
  */
 function resolveSearchSources(options?: SearchOptions): BookSourceRecord[] {
+  const exclude = new Set(
+    (options?.excludeSourceUrls ?? []).filter(
+      (u) => typeof u === "string" && u.trim(),
+    ),
+  );
   const scope = options?.sourceUrls?.filter((u) => typeof u === "string" && u.trim());
+  let sources: BookSourceRecord[];
   if (scope?.length) {
     const out: BookSourceRecord[] = [];
     const seen = new Set<string>();
@@ -97,9 +105,14 @@ function resolveSearchSources(options?: SearchOptions): BookSourceRecord[] {
       if (!source.searchUrl?.trim()) continue;
       out.push(source);
     }
-    return out;
+    sources = out;
+  } else {
+    sources = listEnabledTextSources().filter((s) => s.searchUrl?.trim());
   }
-  return listEnabledTextSources().filter((s) => s.searchUrl?.trim());
+  if (exclude.size) {
+    sources = sources.filter((s) => !exclude.has(s.bookSourceUrl));
+  }
+  return sources;
 }
 
 type SourceSearchState = {

@@ -7,6 +7,11 @@ import type {
   BookSourceRecord,
 } from "@shared/bookSource/types";
 import { isTextBookSource } from "@shared/bookSource/types";
+import {
+  FANQIE_SOURCE_NAME,
+  FANQIE_SOURCE_URL,
+  FANQIE_SEARCH_URL,
+} from "@shared/fanqie/types";
 
 let db: Database.Database | null = null;
 
@@ -53,11 +58,48 @@ export function closeBookSourceStore(): void {
   db = null;
 }
 
+/** 内置番茄书源：走 fqapp 后端桥接，而非 Legado 规则 */
+export function buildFanqieSource(): BookSourceRecord {
+  return {
+    bookSourceUrl: FANQIE_SOURCE_URL,
+    bookSourceName: FANQIE_SOURCE_NAME,
+    bookSourceGroup: "内置",
+    bookSourceType: 0,
+    enabled: true,
+    enabledExplore: false,
+    enabledCookieJar: false,
+    searchUrl: FANQIE_SEARCH_URL,
+    ruleSearch: {},
+    ruleBookInfo: {},
+    ruleToc: {},
+    ruleContent: {},
+    ruleExplore: {},
+    customOrder: -1000000, // 置顶展示
+    lastUpdateTime: Date.now(),
+  };
+}
+
+let fanqieSeeded = false;
+
+/** 确保内置番茄书源存在（幂等） */
+export function ensureBuiltinFanqieSource(): void {
+  if (fanqieSeeded) return;
+  fanqieSeeded = true;
+  try {
+    if (!getBookSource(FANQIE_SOURCE_URL)) {
+      saveBookSource(buildFanqieSource());
+    }
+  } catch {
+    /* 播种失败不阻塞书源功能 */
+  }
+}
+
 function rowToRecord(row: { json: string }): BookSourceRecord {
   return JSON.parse(row.json) as BookSourceRecord;
 }
 
 export function listBookSources(): BookSourceListItem[] {
+  ensureBuiltinFanqieSource();
   const rows = getDb()
     .prepare(`SELECT json, enabled, last_update_time FROM book_sources`)
     .all() as Array<{ json: string; enabled: number; last_update_time: number }>;
@@ -128,6 +170,7 @@ export function applyBookSourceCustomOrders(
 }
 
 export function listEnabledTextSources(): BookSourceRecord[] {
+  ensureBuiltinFanqieSource();
   const rows = getDb()
     .prepare(`SELECT json FROM book_sources WHERE enabled = 1`)
     .all() as { json: string }[];

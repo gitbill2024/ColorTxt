@@ -2,6 +2,15 @@ import type { BookChapter, SearchBookItem, Book } from "@shared/bookSource/types
 import { searchBookToBook } from "@shared/bookSource/bookModel";
 import type { CategoryEditorRow } from "../constants/fileCategories";
 import {
+  FANQIE_SOURCE_URL,
+  FANQIE_SOURCE_NAME,
+  parseFanqieBookId,
+} from "@shared/fanqie/types";
+import {
+  FANQIE_CATEGORY,
+  type FanqieSyncShelfBook,
+} from "@shared/fanqie/ipc";
+import {
   bookshelfContentChapters,
   extractUpdateTimeFromKind,
   resolveLatestChapterTitleFromToc,
@@ -414,4 +423,77 @@ export function updateFindBookBookshelfReadProgress(
   if (!changed) return null;
   saveFindBookBookshelf(next);
   return next;
+}
+
+/** 把「番茄书架同步」返回的书批量并入找书书架，分类统一设为「番茄」 */
+export function addSyncedFanqieBooksToFindBookBookshelf(
+  books: FanqieSyncShelfBook[],
+): { added: number; updated: number; total: number } {
+  let added = 0;
+  let updated = 0;
+  let all = loadFindBookBookshelf();
+  for (const b of books) {
+    const key = bookshelfBookKey(b.bookUrl, FANQIE_SOURCE_URL);
+    const prev = all.find((x) => bookshelfBookKey(x.bookUrl, x.origin) === key);
+    const bookId = parseFanqieBookId(b.bookUrl) ?? b.bookUrl;
+    const chapters: BookChapter[] | undefined = b.chapters?.length
+      ? b.chapters.map((c) => ({
+          title: c.title,
+          url: c.url,
+          isVolume: false,
+          isVip: c.isVip ?? false,
+        }))
+      : prev?.chapters?.length
+        ? prev.chapters
+        : undefined;
+    const merged: BookshelfBook = {
+      name: b.name,
+      author: b.author,
+      intro: b.intro ?? "",
+      coverUrl: b.cover ?? "",
+      coverSourceUrl: b.cover ?? "",
+      kind: b.kind ?? "",
+      wordCount: b.wordCount ?? "",
+      lastChapter: b.lastChapter ?? "",
+      tocUrl: b.tocUrl || b.bookUrl,
+      bookUrl: b.bookUrl,
+      origin: FANQIE_SOURCE_URL,
+      originName: FANQIE_SOURCE_NAME,
+      variable: { id: bookId },
+      id: `fanqie:${bookId}`,
+      savedAt: prev?.savedAt ?? Date.now(),
+      category: FANQIE_CATEGORY,
+      canUpdate: true,
+      ...(chapters ? { chapters } : {}),
+      ...(b.lastReadChapterIndex >= 0
+        ? {
+            lastReadChapterIndex: b.lastReadChapterIndex,
+            lastReadChapterTitle:
+              b.lastReadChapterTitle ||
+              chapters?.[b.lastReadChapterIndex]?.title ||
+              "",
+          }
+        : prev?.lastReadChapterIndex !== undefined
+          ? {
+              lastReadChapterIndex: prev.lastReadChapterIndex,
+              lastReadChapterTitle: prev.lastReadChapterTitle ?? "",
+            }
+          : {}),
+      ...(b.lastReadAt
+        ? { lastReadAt: b.lastReadAt }
+        : prev?.lastReadAt
+          ? { lastReadAt: prev.lastReadAt }
+          : {}),
+    };
+    const idx = all.findIndex((x) => bookshelfBookKey(x.bookUrl, x.origin) === key);
+    if (idx >= 0) {
+      all = all.map((x, i) => (i === idx ? merged : x));
+      updated++;
+    } else {
+      all = [merged, ...all];
+      added++;
+    }
+  }
+  saveFindBookBookshelf(all);
+  return { added, updated, total: books.length };
 }

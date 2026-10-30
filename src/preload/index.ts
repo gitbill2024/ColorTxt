@@ -103,6 +103,8 @@ import {
 } from "@shared/translationTypes";
 import { BOOK_SOURCE_IPC } from "@shared/bookSource/ipc";
 import type { BookSourceIpcApi } from "@shared/bookSource/ipc";
+import { FANQIE_IPC } from "@shared/fanqie/ipc";
+import type { FanqieIpcApi } from "@shared/fanqie/ipc";
 import { WEBDAV_IPC } from "@shared/webDavIpc";
 import type {
   WebDavAuthPayload,
@@ -1616,6 +1618,30 @@ const api = {
       TRANSLATION_IPC.translate,
       payload,
     ) as Promise<TranslationResponse>,
+  fanqieStatus: () =>
+    ipcRenderer.invoke(FANQIE_IPC.status) as ReturnType<
+      FanqieIpcApi["fanqieStatus"]
+    >,
+  fanqieGetBackendUrl: () =>
+    ipcRenderer.invoke(FANQIE_IPC.getBackendUrl) as ReturnType<
+      FanqieIpcApi["fanqieGetBackendUrl"]
+    >,
+  fanqieSetBackendUrl: (url: string) =>
+    ipcRenderer.invoke(FANQIE_IPC.setBackendUrl, url) as ReturnType<
+      FanqieIpcApi["fanqieSetBackendUrl"]
+    >,
+  fanqieGetCookie: () =>
+    ipcRenderer.invoke(FANQIE_IPC.getCookie) as ReturnType<
+      FanqieIpcApi["fanqieGetCookie"]
+    >,
+  fanqieSetCookie: (cookie: string) =>
+    ipcRenderer.invoke(FANQIE_IPC.setCookie, cookie) as ReturnType<
+      FanqieIpcApi["fanqieSetCookie"]
+    >,
+  fanqieSyncShelf: (cookie?: string) =>
+    ipcRenderer.invoke(FANQIE_IPC.syncShelf, cookie) as ReturnType<
+      FanqieIpcApi["fanqieSyncShelf"]
+    >,
 };
 
 contextBridge.exposeInMainWorld("colorTxt", api);

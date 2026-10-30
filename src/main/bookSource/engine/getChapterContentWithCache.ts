@@ -5,6 +5,8 @@
  */
 import type { Book, BookSourceRecord } from "@shared/bookSource/types";
 import { coerceBook } from "@shared/bookSource/bookModel";
+import { isFanqieSource } from "@shared/fanqie/types";
+import { getFanqieChapterContentByUrl } from "../../fanqie/service";
 import {
   getChapterContent,
   isSameBookPageUrl,
@@ -35,6 +37,9 @@ export async function getChapterContentWithCache(
     chapterUrls?: string[];
   },
 ): Promise<{ content: string; fromCache: boolean; displayTitle: string }> {
+  if (isFanqieSource(source)) {
+    return getFanqieContentWithCache(chapterUrl, bookInput, chapter, logs, options);
+  }
   const preferCache = options?.preferCache !== false;
   const cacheDir = options?.cacheDir;
   const book = coerceBook(bookInput);
@@ -113,5 +118,63 @@ export async function getChapterContentWithCache(
     }
   }
 
+  return finalize(content, false);
+}
+
+/** 番茄源正文：优先本地缓存，miss 才调用 fqapp 后端，成功后写缓存。 */
+async function getFanqieContentWithCache(
+  chapterUrl: string,
+  bookInput: ChapterContentBook | Partial<Book>,
+  chapter: ChapterContentChapter,
+  logs: string[] = [],
+  options?: {
+    preferCache?: boolean;
+    cacheDir?: string;
+    chapterUrls?: string[];
+  },
+): Promise<{ content: string; fromCache: boolean; displayTitle: string }> {
+  const book = coerceBook(bookInput);
+  const bookName = book.name || "";
+  const bookUrl = book.bookUrl || "";
+  const finalize = (raw: string, fromCache: boolean) => ({
+    content: raw,
+    fromCache,
+    displayTitle: chapter.title || "",
+  });
+
+  const preferCache = options?.preferCache !== false;
+  const cacheDir = options?.cacheDir;
+  if (preferCache && bookUrl && chapterUrl) {
+    const cached = await readChapterCache(bookName, bookUrl, chapterUrl, cacheDir);
+    if (cached != null) {
+      const stripped = stripLeadingDuplicateChapterTitle(cached, chapter.title, bookName);
+      if (stripped !== cached) {
+        try {
+          await saveChapterCache(bookName, bookUrl, chapterUrl, stripped, cacheDir);
+        } catch {
+          /* ignore rewrite failures */
+        }
+      }
+      return finalize(stripped, true);
+    }
+  }
+
+  let content: string;
+  try {
+    content = await getFanqieChapterContentByUrl(chapterUrl, chapter.title || "");
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    logs.push(`[番茄小说] 正文获取失败: ${msg}`);
+    throw e;
+  }
+
+  if (bookUrl && chapterUrl && content.length) {
+    try {
+      await saveChapterCache(bookName, bookUrl, chapterUrl, content, cacheDir);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      logs.push(`写入章节缓存失败: ${msg}`);
+    }
+  }
   return finalize(content, false);
 }

@@ -67,6 +67,7 @@ import { readActiveChatEndpoint } from "@shared/aiEndpointProfiles";
 import { attributeVoiceReadSpeakers } from "./ai/voiceReadSpeaker";
 import { registerVoiceReadIpcHandlers } from "./voiceRead/registerVoiceReadIpc";
 import { registerBookSourceIpcHandlers } from "./bookSource/registerBookSourceIpc";
+import { registerFanqieIpcHandlers } from "./fanqie/ipc";
 import { registerWebDavIpcHandlers } from "./webdav/registerWebDavIpc";
 import { registerDictionaryIpcHandlers } from "./dictionary/registerDictionaryIpc";
 import { registerTranslationIpcHandlers } from "./translation/registerTranslationIpc";
@@ -1171,6 +1172,7 @@ function unknownQuoteAttributions(
   registerAiIpcHandlers();
   registerVoiceReadIpcHandlers();
   registerBookSourceIpcHandlers();
+  registerFanqieIpcHandlers();
   registerSecretsIpcHandlers();
   registerTextConvertIpcHandlers();
   registerWebDavIpcHandlers();

@@ -5,6 +5,12 @@ import type {
   BookChapter,
   BookInfoSeed,
 } from "@shared/bookSource/types";
+import { isFanqieSource } from "@shared/fanqie/types";
+import {
+  getFanqieBookInfo,
+  getFanqieChapterList,
+  searchFanqieSource,
+} from "../../fanqie/service";
 import { splitBookMetaTags } from "@shared/bookSource/bookMetaTags";
 import {
   coerceBook,
@@ -439,6 +445,14 @@ export async function searchBook(
   page = 1,
   logs: string[] = [],
 ): Promise<SearchBookItem[]> {
+  if (isFanqieSource(source)) {
+    try {
+      return await searchFanqieSource(key, page);
+    } catch (e) {
+      logs.push(`[番茄小说] 搜索失败：${e instanceof Error ? e.message : String(e)}`);
+      throw e;
+    }
+  }
   const searchUrl = source.searchUrl?.trim();
   if (!searchUrl) throw new Error("搜索 url 不能为空");
   const host = createJsExtensionHost(source, logs);
@@ -1320,6 +1334,26 @@ export async function getBookInfo(
   /** 对齐 Legado-E WebBook.getBookInfoAwait；与 ruleBookInfo.canReName 同时为真才允许覆盖已有书名/作者 */
   canReName = true,
 ): Promise<Book> {
+  if (isFanqieSource(source)) {
+    try {
+      const detail = await getFanqieBookInfo(bookUrl, name, author, {
+        kind: seed.kind,
+        wordCount: seed.wordCount,
+        intro: seed.intro,
+        lastChapter: seed.lastChapter,
+        coverUrl: seed.coverUrl,
+        variable: seed.variable,
+        tocUrl: seed.tocUrl,
+      });
+      // 若详情未返回简介/分类，保留搜索信息
+      if (!detail.intro) detail.intro = seed.intro?.trim() ?? "";
+      if (!detail.kind) detail.kind = seed.kind?.trim() ?? "";
+      return detail;
+    } catch (e) {
+      logs.push(`[番茄小说] 详情获取失败：${e instanceof Error ? e.message : String(e)}`);
+      throw e;
+    }
+  }
   const host = createJsExtensionHost(source, logs);
   runJsLib(source, host);
   const resolvedBookUrl = ensureBookUrlWithHeaders(bookUrl, host);
@@ -1921,6 +1955,19 @@ export async function getChapterList(
   bookInput: Book,
   logs: string[] = [],
 ): Promise<BookChapter[]> {
+  if (isFanqieSource(source)) {
+    const bookUrl = bookInput.bookUrl?.trim() || "";
+    try {
+      const chapters = await getFanqieChapterList(bookUrl);
+      if (!chapters.length) {
+        logs.push("[番茄小说] 目录为空");
+      }
+      return chapters;
+    } catch (e) {
+      logs.push(`[番茄小说] 目录获取失败：${e instanceof Error ? e.message : String(e)}`);
+      throw e;
+    }
+  }
   const host = createJsExtensionHost(source, logs);
   runJsLib(source, host);
   const rule = source.ruleToc ?? {};

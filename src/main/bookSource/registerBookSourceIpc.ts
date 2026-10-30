@@ -201,10 +201,17 @@ export function registerBookSourceIpcHandlers(): void {
     if (!k) return { searchId: "" };
     const opts =
       options && typeof options === "object"
-        ? (options as { sourceUrls?: unknown; precisionSearch?: unknown })
+        ? (options as {
+            sourceUrls?: unknown;
+            precisionSearch?: unknown;
+            excludeSourceUrls?: unknown;
+          })
         : null;
     const sourceUrls = Array.isArray(opts?.sourceUrls)
       ? opts.sourceUrls.filter((u) => typeof u === "string")
+      : undefined;
+    const excludeSourceUrls = Array.isArray(opts?.excludeSourceUrls)
+      ? opts.excludeSourceUrls.filter((u) => typeof u === "string")
       : undefined;
     const precisionSearch = opts?.precisionSearch === true;
     const wc = e.sender;
@@ -215,6 +222,7 @@ export function registerBookSourceIpcHandlers(): void {
       },
       {
         ...(sourceUrls?.length ? { sourceUrls } : {}),
+        ...(excludeSourceUrls?.length ? { excludeSourceUrls } : {}),
         ...(precisionSearch ? { precisionSearch: true } : {}),
       },
     );

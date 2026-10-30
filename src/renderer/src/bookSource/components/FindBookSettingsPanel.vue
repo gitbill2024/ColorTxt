@@ -22,6 +22,7 @@ import FindBookSettingsTabBar, {
 import FindBookSettingsDownloadPanel from "./FindBookSettingsDownloadPanel.vue";
 import FindBookSettingsProxyPanel from "./FindBookSettingsProxyPanel.vue";
 import SettingsWebDavPanel from "../../components/SettingsWebDavPanel.vue";
+import FanqieSettingsPanel from "./FanqieSettingsPanel.vue";
 import {
   clampFindBookReaderLineHeight,
   defaultTimedScrollIntervalMs,
@@ -833,6 +834,8 @@ watch(draftFontSize, (size) => {
               v-model:draft-web-dav-password="draftWebDavPassword"
               v-model:draft-web-dav-remote-dir="draftWebDavRemoteDir"
             />
+
+            <FanqieSettingsPanel v-show="activeTab === 'fanqie'" />
           </div>
         </div>
       </div>

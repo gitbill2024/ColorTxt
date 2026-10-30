@@ -47,6 +47,7 @@ import {
 } from "../composables/useBookSource";
 import { useBookshelfCoverUrls } from "../composables/useBookshelfCoverUrls";
 import type { BookSourceListItem, Book, BookChapter, SearchBookItem } from "@shared/bookSource/types";
+import { FANQIE_SOURCE_URL } from "@shared/fanqie/types";
 import { appLog } from "../../services/appDialog";
 import { appToast } from "../../services/appToast";
 import type { BookshelfBook } from "../findBookBookshelf";
@@ -409,6 +410,8 @@ const searchScope = ref<Pick<BookSourceListItem, "bookSourceUrl" | "bookSourceNa
   null,
 );
 const precisionSearch = ref(false);
+/** 仅番茄搜索：开启时只搜番茄，关闭时搜索排除番茄 */
+const fanqieOnly = ref(false);
 const moreBtnRef = ref<HTMLElement | null>(null);
 const webDavBtnRef = ref<HTMLElement | null>(null);
 const searchOptionsBtnRef = ref<HTMLElement | null>(null);
@@ -470,8 +473,19 @@ function bindSearchOptionsPanel(el: HTMLElement | null) {
 }
 
 function buildSearchOptions() {
-  const opts: { sourceUrls?: string[]; precisionSearch?: boolean } = {};
-  if (searchScope.value) opts.sourceUrls = [searchScope.value.bookSourceUrl];
+  const opts: {
+    sourceUrls?: string[];
+    precisionSearch?: boolean;
+    excludeSourceUrls?: string[];
+  } = {};
+  if (fanqieOnly.value) {
+    // 仅番茄：无论是否限定其它源，都只搜番茄
+    opts.sourceUrls = [FANQIE_SOURCE_URL];
+  } else {
+    if (searchScope.value) opts.sourceUrls = [searchScope.value.bookSourceUrl];
+    // 非番茄模式：从本次搜索中排除番茄
+    opts.excludeSourceUrls = [FANQIE_SOURCE_URL];
+  }
   if (precisionSearch.value) opts.precisionSearch = true;
   return Object.keys(opts).length ? opts : undefined;
 }
@@ -1093,6 +1107,16 @@ function onPrecisionSearchChange(value: boolean) {
   rerunSearchIfNeeded();
 }
 
+function clearFanqieOnly() {
+  fanqieOnly.value = false;
+  rerunSearchIfNeeded();
+}
+
+function onFanqieOnlyChange(value: boolean) {
+  fanqieOnly.value = value;
+  rerunSearchIfNeeded();
+}
+
 const currentTheme = ref<AppShellTheme>(readPersistedAppShellTheme());
 const webDavEnabled = ref(false);
 const webDavBusy = ref(false);
@@ -1348,6 +1372,7 @@ watch(modelValue, (open) => {
   if (!open) {
     searchScope.value = null;
     precisionSearch.value = false;
+    fanqieOnly.value = false;
     searchInputFocused.value = false;
     mainTab.value = "search";
     discoverFilter.value = "";
@@ -1487,6 +1512,19 @@ function onBack() {
                 title="移除"
                 @mousedown.prevent
                 @click="clearPrecisionSearch"
+              >
+                <span class="findBookScopeTagRemoveIcon" v-html="icons.close" />
+              </button>
+            </div>
+            <div v-if="fanqieOnly" class="findBookScopeTag">
+              <span class="findBookScopeTagLabel">仅番茄搜索</span>
+              <button
+                type="button"
+                class="findBookScopeTagRemove"
+                aria-label="关闭仅番茄搜索"
+                title="移除"
+                @mousedown.prevent
+                @click="clearFanqieOnly"
               >
                 <span class="findBookScopeTagRemoveIcon" v-html="icons.close" />
               </button>
@@ -1664,6 +1702,22 @@ function onBack() {
           <SwitchToggle
             class="findBookSearchOptionSwitch"
             :model-value="precisionSearch"
+            size="sm"
+            aria-hidden="true"
+            tabindex="-1"
+          />
+        </button>
+        <button
+          type="button"
+          class="appShellMenuItem findBookSearchOptionItem"
+          role="menuitemcheckbox"
+          :aria-checked="fanqieOnly"
+          @click="onFanqieOnlyChange(!fanqieOnly)"
+        >
+          <span class="appShellMenuLabel">仅番茄搜索</span>
+          <SwitchToggle
+            class="findBookSearchOptionSwitch"
+            :model-value="fanqieOnly"
             size="sm"
             aria-hidden="true"
             tabindex="-1"

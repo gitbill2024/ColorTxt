@@ -230,7 +230,12 @@ export type BookSourceIpcApi = {
   bookSourceReadFile: (filePath: string) => Promise<{ ok: boolean; text?: string; message?: string }>;
   bookSourceSearch: (
     key: string,
-    options?: { sourceUrls?: string[]; precisionSearch?: boolean },
+    options?: {
+      sourceUrls?: string[];
+      precisionSearch?: boolean;
+      /** 本次搜索排除的书源 URL 列表 */
+      excludeSourceUrls?: string[];
+    },
   ) => Promise<{ searchId: string }>;
   bookSourceSearchCancel: (searchId: string) => Promise<void>;
   bookSourceSearchLoadMore: (searchId: string) => Promise<{ ok: boolean }>;
